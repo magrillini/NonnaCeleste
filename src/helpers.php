@@ -76,17 +76,16 @@ function media_url(?string $path): string
         return $trimmedPath;
     }
 
-    $normalizedPath = ltrim($trimmedPath, '/');
-    if (str_starts_with($normalizedPath, 'storage/')) {
-        return '/?action=media&path=' . rawurlencode($normalizedPath);
+    if (str_starts_with($trimmedPath, 'storage/')) {
+        return '/?action=media&path=' . rawurlencode($trimmedPath);
     }
 
-    return str_starts_with($trimmedPath, '/') ? $trimmedPath : '/' . $normalizedPath;
+    return str_starts_with($trimmedPath, '/') ? $trimmedPath : '/' . ltrim($trimmedPath, '/');
 }
 
 function media_storage_path(?string $path): ?string
 {
-    $trimmedPath = ltrim(trim((string) $path), '/');
+    $trimmedPath = trim((string) $path);
     if ($trimmedPath === '' || !str_starts_with($trimmedPath, 'storage/')) {
         return null;
     }
