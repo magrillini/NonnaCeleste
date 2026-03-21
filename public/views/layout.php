@@ -46,6 +46,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php endif; ?>
 
     <?php if ($action === 'home'): ?>
+        <?php include __DIR__ . '/partials/home-hero.php'; ?>
         <section class="hero">
             <img src="<?= e(media_url($homeHeroImage)) ?>" alt="Nonna Celeste in cucina">
             <div>
