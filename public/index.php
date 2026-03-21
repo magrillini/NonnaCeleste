@@ -9,6 +9,10 @@ if ($action === 'gallery') {
 $user = current_user();
 $flash = consume_flash();
 
+if (!$user && !in_array($action, ['login', 'media'], true)) {
+    $action = 'landing';
+}
+
 if ($action === 'media') {
     $mediaPath = media_storage_path((string) query('path', ''));
     if ($mediaPath === null) {
@@ -35,7 +39,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         flash('error', 'Credenziali non valide.');
     }
-    redirect('/');
+    redirect('/?action=home');
 }
 
 if ($action === 'logout') {
@@ -280,6 +284,26 @@ if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST'
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_save_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    try {
+        if (save_login_cover_image($_FILES['login_cover_image'] ?? [], (int) $user['id'])) {
+            flash('success', 'Immagine della pagina login aggiornata correttamente.');
+        } else {
+            flash('error', 'Seleziona un file immagine da caricare per la pagina login.');
+        }
+    } catch (Throwable $e) {
+        flash('error', 'Errore aggiornamento pagina login: ' . $e->getMessage());
+    }
+
+    redirect('/?action=admin');
+}
+
+if ($action === 'admin_reset_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    reset_login_cover_image();
+    flash('success', 'Immagine della pagina login ripristinata.');
+    redirect('/?action=admin');
+}
+
 if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     delete_home_slide((int) post('slide_id', 0));
     flash('success', 'Foto Home eliminata.');
@@ -349,6 +373,7 @@ foreach ($homeHeroSlides = home_hero_slides() as $slide) {
 usort($photoGallery, static fn (array $a, array $b): int => strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? '')));
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
+$loginCoverImage = login_cover_image_path();
 $pageViews = increment_page_views();
 $activeUsersCount = active_logged_in_users_count();
 $totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();

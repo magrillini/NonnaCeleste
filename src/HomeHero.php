@@ -99,6 +99,46 @@ function store_home_image(array $file, int $userId): ?string
     return 'storage/home/' . $name;
 }
 
+
+function login_cover_image_path(): ?string
+{
+    $path = site_setting('login_cover_image');
+    return $path !== null && trim($path) !== '' ? $path : null;
+}
+
+function save_login_cover_image(array $file, int $userId): bool
+{
+    $path = store_home_image($file, $userId);
+    if ($path === null) {
+        return false;
+    }
+
+    $currentPath = login_cover_image_path();
+    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
+        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
+        if (is_file($absoluteCurrentPath)) {
+            unlink($absoluteCurrentPath);
+        }
+    }
+
+    set_site_setting('login_cover_image', $path);
+
+    return true;
+}
+
+function reset_login_cover_image(): void
+{
+    $currentPath = login_cover_image_path();
+    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
+        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
+        if (is_file($absoluteCurrentPath)) {
+            unlink($absoluteCurrentPath);
+        }
+    }
+
+    delete_site_setting('login_cover_image');
+}
+
 function ensure_legacy_home_slide(): void
 {
     global $db;
