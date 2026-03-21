@@ -65,6 +65,50 @@ function consume_flash(): ?array
     return $flash;
 }
 
+function media_url(?string $path): string
+{
+    $trimmedPath = trim((string) $path);
+    if ($trimmedPath === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $trimmedPath) === 1) {
+        return $trimmedPath;
+    }
+
+    if (str_starts_with($trimmedPath, 'storage/')) {
+        return '/?action=media&path=' . rawurlencode($trimmedPath);
+    }
+
+    return str_starts_with($trimmedPath, '/') ? $trimmedPath : '/' . ltrim($trimmedPath, '/');
+}
+
+function media_storage_path(?string $path): ?string
+{
+    $trimmedPath = trim((string) $path);
+    if ($trimmedPath === '' || !str_starts_with($trimmedPath, 'storage/')) {
+        return null;
+    }
+
+    $relativePath = substr($trimmedPath, strlen('storage/'));
+    if ($relativePath === '' || str_contains($relativePath, '..')) {
+        return null;
+    }
+
+    $absolutePath = STORAGE_PATH . '/' . ltrim($relativePath, '/');
+    $realPath = realpath($absolutePath);
+    $storageRoot = realpath(STORAGE_PATH);
+    if ($realPath === false || $storageRoot === false) {
+        return null;
+    }
+
+    if (!str_starts_with($realPath, $storageRoot . DIRECTORY_SEPARATOR)) {
+        return null;
+    }
+
+    return is_file($realPath) ? $realPath : null;
+}
+
 function save_uploaded_images(array $files, int $recipeId, int $userId): void
 {
     global $db;
