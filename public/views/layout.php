@@ -13,9 +13,14 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 </head>
 <body>
 <header class="site-header">
-    <div>
-        <h1>Nonna Celeste</h1>
-        <p>Archivio di ricette tradizionali italiane, varianti e ricette familiari.</p>
+    <div class="site-branding">
+        <h1>WWW.NONNACELESTE.IT</h1>
+        <p>Archivio di ricette della Tradizione Familiare e le Moderne varianti</p>
+    </div>
+    <div class="site-stats">
+        <span><strong>Pagine visitate:</strong> <?= (int) $pageViews ?></span>
+        <span><strong>Utenti loggati ora:</strong> <?= (int) $activeUsersCount ?></span>
+        <span><strong>Ricette inserite:</strong> <?= (int) $totalRecipes ?></span>
     </div>
     <nav>
         <a href="/">Home</a>
@@ -47,21 +52,9 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
     <?php if ($action === 'home'): ?>
         <?php include __DIR__ . '/partials/home-hero.php'; ?>
-        <section class="hero">
-            <img src="<?= e(media_url($homeHeroImage)) ?>" alt="Nonna Celeste in cucina">
-            <div>
-                <h2>La cucina di Nonna Celeste</h2>
-                <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
-                <div class="grid-buttons">
-                    <a class="card-button" href="/?action=traditional">Ricetta tradizionale</a>
-                    <a class="card-button" href="/?action=family">Ricette familiari</a>
-                    <a class="card-button" href="/?action=submit">Inserimento ricetta</a>
-                </div>
-            </div>
-        </section>
     <?php elseif (in_array($action, ['traditional','family'], true)): ?>
         <section>
-            <h2><?= $action === 'traditional' ? 'Ricette tradizionali e varianti' : 'Ricette familiari' ?></h2>
+            <h2 class="page-title"><?= $action === 'traditional' ? 'Ricette tradizionali e varianti' : 'Ricette familiari' ?></h2>
             <?php if ($action === 'family'): ?>
                 <form method="get" class="filters">
                     <input type="hidden" name="action" value="family">
@@ -91,7 +84,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         </section>
     <?php elseif ($action === 'submit'): ?>
         <section>
-            <h2>Inserimento ricetta</h2>
+            <h2 class="page-title">Inserimento ricetta</h2>
             <p>Gli ingredienti si possono aggiungere uno alla volta, gli utensili restano visibili solo se selezionati e il cuoco deve essere scelto dall'elenco approvato dall'admin.</p>
             <form method="post" action="/?action=save_recipe" enctype="multipart/form-data" class="stack-form">
                 <label>Nome ricetta <input type="text" name="title" required></label>
@@ -217,7 +210,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <button onclick="window.print()">Stampa in PDF</button>
                 <?php if (!empty($recipe['holiday'])): ?><a href="<?= e(google_calendar_link($recipe)) ?>" target="_blank" rel="noreferrer">Aggiungi a Google Calendar</a><?php endif; ?>
             </div>
-            <h2><?= e($recipe['title']) ?></h2>
+            <h2 class="page-title"><?= e($recipe['title']) ?></h2>
             <p><strong>Cuoco:</strong> <?= e($recipe['cook_name']) ?></p>
             <p><strong>Tipologia:</strong> <?= e($recipe['visibility_type']) ?></p>
             <p><strong>Festività:</strong> <?= e($recipe['holiday'] ?: 'Nessuna') ?></p>
@@ -274,7 +267,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         </article>
     <?php elseif ($action === 'gallery'): ?>
         <section>
-            <h2>Galleria ricette</h2>
+            <h2 class="page-title">Galleria ricette</h2>
             <div class="recipe-grid">
                 <?php foreach ($galleryRecipes as $item): ?>
                     <article class="recipe-card">
@@ -288,7 +281,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         </section>
     <?php elseif ($action === 'contacts'): ?>
         <section>
-            <h2>Contatti e richieste</h2>
+            <h2 class="page-title">Contatti e richieste</h2>
             <p>Da questa pagina si possono inviare richieste generali, cancellazioni ricette e richieste per inserire un nuovo cuoco nell'elenco gestito dall'admin.</p>
             <div class="admin-grid">
                 <form class="stack-form" action="/?action=save_contact_request" method="post">
@@ -319,7 +312,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         </section>
     <?php elseif ($action === 'admin' && is_admin()): ?>
         <section>
-            <h2>Pannello amministrazione</h2>
+            <h2 class="page-title">Pannello amministrazione</h2>
             <div class="admin-grid">
                 <form method="post" action="/?action=admin_save_home_media" enctype="multipart/form-data" class="stack-form">
                     <h3>Slider e grafica Home</h3>

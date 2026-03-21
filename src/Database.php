@@ -165,6 +165,14 @@ CREATE TABLE IF NOT EXISTS home_slides (
     created_at TEXT NOT NULL,
     FOREIGN KEY(uploaded_by_user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS active_sessions (
+    session_id TEXT PRIMARY KEY,
+    user_id INTEGER,
+    current_path TEXT,
+    last_seen INTEGER NOT NULL,
+    FOREIGN KEY(user_id) REFERENCES users(id)
+);
 SQL);
 
         self::ensureColumn($db, 'recipes', 'cook_id', 'INTEGER REFERENCES cooks(id)');
