@@ -52,6 +52,8 @@ img { max-width: 100%; display: block; }
 .selected-utensils.empty { color: var(--muted); }
 .plain-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .85rem; }
 .small-form { margin-top: 1rem; }
+.helper-text { margin: 0; color: var(--muted); line-height: 1.5; }
+.admin-preview { width: 100%; max-height: 220px; object-fit: cover; border-radius: 14px; border: 1px solid var(--border); }
 @media (max-width: 860px) {
   .hero, .grid-buttons, .selection-layout { grid-template-columns: 1fr; }
   .inline-grid { grid-template-columns: 1fr; }
