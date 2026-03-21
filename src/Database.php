@@ -149,6 +149,12 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS site_settings (
+    key_name TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 SQL);
 
         self::ensureColumn($db, 'recipes', 'cook_id', 'INTEGER REFERENCES cooks(id)');

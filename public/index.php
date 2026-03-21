@@ -182,6 +182,27 @@ if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_update_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    try {
+        $didUpload = save_home_hero_image($_FILES['home_hero_image'] ?? [], (int) $user['id']);
+        if ($didUpload) {
+            flash('success', 'Foto Home aggiornata correttamente.');
+        } else {
+            flash('error', 'Seleziona un\'immagine da caricare.');
+        }
+    } catch (Throwable $e) {
+        flash('error', 'Errore upload Home: ' . $e->getMessage());
+    }
+
+    redirect('/?action=admin');
+}
+
+if ($action === 'admin_reset_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    reset_home_hero_image();
+    flash('success', 'Foto Home ripristinata all\'immagine predefinita.');
+    redirect('/?action=admin');
+}
+
 $ingredients = fetch_all($db, 'SELECT * FROM ingredients ORDER BY name');
 $utensils = fetch_all($db, 'SELECT * FROM utensils ORDER BY name');
 $cookingMethods = fetch_all($db, 'SELECT * FROM cooking_methods ORDER BY name');
@@ -224,5 +245,6 @@ if ($action === 'recipe' && ($recipeId = (int) query('id'))) {
 }
 
 $galleryRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook_name, MIN(recipe_images.path) AS image_path FROM recipes LEFT JOIN recipe_images ON recipe_images.recipe_id = recipes.id GROUP BY recipes.id ORDER BY recipes.created_at DESC');
+$homeHeroImage = home_hero_image_path();
 
 include __DIR__ . '/views/layout.php';

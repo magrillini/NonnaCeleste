@@ -47,7 +47,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
     <?php if ($action === 'home'): ?>
         <section class="hero">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" alt="Nonna Celeste in cucina">
+            <img src="<?= e($homeHeroImage) ?>" alt="Nonna Celeste in cucina">
             <div>
                 <h2>La cucina di Nonna Celeste</h2>
                 <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
@@ -319,6 +319,20 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php elseif ($action === 'admin' && is_admin()): ?>
         <section>
             <h2>Pannello amministrazione</h2>
+            <div class="admin-grid">
+                <form method="post" action="/?action=admin_update_home_hero" enctype="multipart/form-data" class="stack-form">
+                    <h3>Foto Home</h3>
+                    <p class="helper-text">Carica una nuova immagine hero per la Home. Formati supportati: JPG, PNG, WEBP, GIF.</p>
+                    <img src="<?= e($homeHeroImage) ?>" alt="Anteprima foto Home" class="admin-preview">
+                    <label>Nuova foto Home <input type="file" name="home_hero_image" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
+                    <button type="submit">Carica e pubblica</button>
+                </form>
+                <form method="post" action="/?action=admin_reset_home_hero" class="stack-form">
+                    <h3>Ripristina immagine predefinita</h3>
+                    <p class="helper-text">Usa questa opzione per tornare alla foto standard della Home senza cancellare altre sezioni del sito.</p>
+                    <button type="submit" class="secondary-button">Ripristina foto default</button>
+                </form>
+            </div>
             <div class="admin-grid">
                 <form method="post" action="/?action=admin_add_catalog" class="stack-form">
                     <input type="hidden" name="catalog_type" value="ingredient">

@@ -92,6 +92,87 @@ function save_uploaded_images(array $files, int $recipeId, int $userId): void
     }
 }
 
+function site_setting(string $key, ?string $default = null): ?string
+{
+    global $db;
+    $stmt = $db->prepare('SELECT value FROM site_settings WHERE key_name = ?');
+    $stmt->execute([$key]);
+    $value = $stmt->fetchColumn();
+    return $value === false ? $default : (string) $value;
+}
+
+function set_site_setting(string $key, string $value): void
+{
+    global $db;
+    $db->prepare('INSERT INTO site_settings(key_name,value,updated_at) VALUES(?,?,?) ON CONFLICT(key_name) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at')
+        ->execute([$key, $value, date(DATE_ATOM)]);
+}
+
+function delete_site_setting(string $key): void
+{
+    global $db;
+    $db->prepare('DELETE FROM site_settings WHERE key_name = ?')->execute([$key]);
+}
+
+function home_hero_image_path(): string
+{
+    return site_setting('home_hero_image', 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80') ?? 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80';
+}
+
+function save_home_hero_image(array $file, int $userId): bool
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+        return false;
+    }
+
+    $mimeType = mime_content_type($file['tmp_name']) ?: '';
+    $allowed = [
+        'image/jpeg' => 'jpg',
+        'image/png' => 'png',
+        'image/webp' => 'webp',
+        'image/gif' => 'gif',
+    ];
+
+    if (!isset($allowed[$mimeType])) {
+        throw new RuntimeException('Formato immagine non supportato. Usa JPG, PNG, WEBP o GIF.');
+    }
+
+    $targetDir = STORAGE_PATH . '/home';
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    $currentPath = site_setting('home_hero_image');
+    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
+        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
+        if (is_file($absoluteCurrentPath)) {
+            unlink($absoluteCurrentPath);
+        }
+    }
+
+    $name = sprintf('home_hero_user_%d_%s.%s', $userId, uniqid('', true), $allowed[$mimeType]);
+    $destination = $targetDir . '/' . $name;
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        throw new RuntimeException('Upload immagine non riuscito.');
+    }
+
+    set_site_setting('home_hero_image', 'storage/home/' . $name);
+    return true;
+}
+
+function reset_home_hero_image(): void
+{
+    $currentPath = site_setting('home_hero_image');
+    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
+        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
+        if (is_file($absoluteCurrentPath)) {
+            unlink($absoluteCurrentPath);
+        }
+    }
+
+    delete_site_setting('home_hero_image');
+}
+
 function google_calendar_link(array $recipe): string
 {
     $title = rawurlencode('Ricetta: ' . $recipe['title']);
