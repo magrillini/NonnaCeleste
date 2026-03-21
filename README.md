@@ -10,7 +10,7 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
   - 30 utensili da cucina.
   - 10 modalità di cottura.
 - Ricette con:
-  - nome, cuoco, categoria, festività, momento della giornata, portata;
+  - nome, cuoco da elenco approvato dall'admin, categoria, festività, momento della giornata, portata;
   - ingredienti con quantità in grammi, centilitri o `qb`;
   - utensili;
   - più modalità di cottura con tempo;
@@ -18,8 +18,8 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
   - galleria immagini;
   - stampa PDF via foglio di stampa del browser.
 - Commenti pubblici modificabili solo dal proprietario.
-- Area admin per inserimento ingredienti e utensili mancanti.
-- Pagina contatti/richieste con form di richiesta cancellazione ricetta via mailto.
+- Area admin per inserimento ingredienti, utensili mancanti e anagrafica cuochi approvati.
+- Pagina contatti/richieste con richieste di cancellazione ricetta e richiesta inserimento nuovo cuoco.
 - Link rapido per aggiungere una ricetta/festività a Google Calendar.
 
 ## Avvio rapido
