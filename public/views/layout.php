@@ -46,7 +46,18 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php endif; ?>
 
     <?php if ($action === 'home'): ?>
-        <?php include __DIR__ . '/partials/home-hero.php'; ?>
+        <section class="hero">
+            <img src="<?= e($homeHeroImage) ?>" alt="Nonna Celeste in cucina">
+            <div>
+                <h2>La cucina di Nonna Celeste</h2>
+                <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
+                <div class="grid-buttons">
+                    <a class="card-button" href="/?action=traditional">Ricetta tradizionale</a>
+                    <a class="card-button" href="/?action=family">Ricette familiari</a>
+                    <a class="card-button" href="/?action=submit">Inserimento ricetta</a>
+                </div>
+            </div>
+        </section>
     <?php elseif (in_array($action, ['traditional','family'], true)): ?>
         <section>
             <h2><?= $action === 'traditional' ? 'Ricette tradizionali e varianti' : 'Ricette familiari' ?></h2>
