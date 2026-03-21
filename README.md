@@ -18,7 +18,7 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
   - galleria immagini;
   - stampa PDF via foglio di stampa del browser.
 - Commenti pubblici modificabili solo dal proprietario.
-- Area admin per inserimento ingredienti, utensili mancanti, anagrafica cuochi approvati, slider fotografico della Home e scelta grafica della testata.
+- Area admin per inserimento ingredienti, utensili mancanti, anagrafica cuochi approvati e gestione della Home con foto principali, slider fotografico e scelta grafica della testata.
 - Pagina contatti/richieste con richieste di cancellazione ricetta e richiesta inserimento nuovo cuoco.
 - Link rapido per aggiungere una ricetta/festività a Google Calendar.
 
