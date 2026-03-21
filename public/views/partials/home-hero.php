@@ -2,7 +2,7 @@
     <div class="hero-media" data-hero-slider>
         <?php foreach ($homeHeroSlides as $index => $slide): ?>
             <figure class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide>
-                <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home Nonna Celeste') ?>">
+                <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home Nonna Celeste') ?>">
             </figure>
         <?php endforeach; ?>
         <?php if (count($homeHeroSlides) > 1): ?>
