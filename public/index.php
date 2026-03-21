@@ -2,8 +2,16 @@
 require_once __DIR__ . '/../src/bootstrap.php';
 
 $action = query('action', 'home');
+if ($action === 'gallery') {
+    $action = 'photo_gallery';
+}
+
 $user = current_user();
 $flash = consume_flash();
+
+if (!$user && !in_array($action, ['login', 'media'], true)) {
+    $action = 'landing';
+}
 
 if ($action === 'media') {
     $mediaPath = media_storage_path((string) query('path', ''));
@@ -31,7 +39,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         flash('error', 'Credenziali non valide.');
     }
-    redirect('/');
+    redirect('/?action=home');
 }
 
 if ($action === 'logout') {
@@ -39,6 +47,66 @@ if ($action === 'logout') {
     session_destroy();
     header('Location: /');
     exit;
+}
+
+if ($action === 'update_profile' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$user) {
+        flash('error', 'Devi accedere per aggiornare i dati personali.');
+        redirect('/?action=profile');
+    }
+
+    $name = trim((string) post('name'));
+    $email = trim((string) post('email'));
+
+    if ($name === '' || $email === '') {
+        flash('error', 'Nome ed email sono obbligatori.');
+        redirect('/?action=profile');
+    }
+
+    $existingUser = $db->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
+    $existingUser->execute([$email, (int) $user['id']]);
+    if ($existingUser->fetch()) {
+        flash('error', 'Questa email è già usata da un altro account.');
+        redirect('/?action=profile');
+    }
+
+    $db->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
+        ->execute([$name, $email, (int) $user['id']]);
+
+    flash('success', 'Dati personali aggiornati correttamente.');
+    redirect('/?action=profile');
+}
+
+if ($action === 'change_password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!$user) {
+        flash('error', 'Devi accedere per cambiare password.');
+        redirect('/?action=profile');
+    }
+
+    $currentPassword = (string) post('current_password');
+    $newPassword = (string) post('new_password');
+    $confirmPassword = (string) post('confirm_password');
+
+    if (!password_verify($currentPassword, (string) $user['password'])) {
+        flash('error', 'La password attuale non è corretta.');
+        redirect('/?action=profile');
+    }
+
+    if (strlen($newPassword) < 8) {
+        flash('error', 'La nuova password deve contenere almeno 8 caratteri.');
+        redirect('/?action=profile');
+    }
+
+    if ($newPassword !== $confirmPassword) {
+        flash('error', 'La conferma password non coincide.');
+        redirect('/?action=profile');
+    }
+
+    $db->prepare('UPDATE users SET password = ? WHERE id = ?')
+        ->execute([password_hash($newPassword, PASSWORD_DEFAULT), (int) $user['id']]);
+
+    flash('success', 'Password aggiornata correttamente.');
+    redirect('/?action=profile');
 }
 
 if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -216,6 +284,26 @@ if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST'
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_save_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    try {
+        if (save_login_cover_image($_FILES['login_cover_image'] ?? [], (int) $user['id'])) {
+            flash('success', 'Immagine della pagina login aggiornata correttamente.');
+        } else {
+            flash('error', 'Seleziona un file immagine da caricare per la pagina login.');
+        }
+    } catch (Throwable $e) {
+        flash('error', 'Errore aggiornamento pagina login: ' . $e->getMessage());
+    }
+
+    redirect('/?action=admin');
+}
+
+if ($action === 'admin_reset_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    reset_login_cover_image();
+    flash('success', 'Immagine della pagina login ripristinata.');
+    redirect('/?action=admin');
+}
+
 if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     delete_home_slide((int) post('slide_id', 0));
     flash('success', 'Foto Home eliminata.');
@@ -269,10 +357,23 @@ if ($action === 'recipe' && ($recipeId = (int) query('id'))) {
     }
 }
 
-$galleryRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook_name, MIN(recipe_images.path) AS image_path FROM recipes LEFT JOIN recipe_images ON recipe_images.recipe_id = recipes.id GROUP BY recipes.id ORDER BY recipes.created_at DESC');
-$homeHeroSlides = home_hero_slides();
+$bookRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook_name, recipes.visibility_type, recipes.holiday, recipes.meal_time, recipes.course_type, MIN(recipe_images.path) AS image_path FROM recipes LEFT JOIN recipe_images ON recipe_images.recipe_id = recipes.id GROUP BY recipes.id ORDER BY recipes.created_at DESC');
+$photoGallery = fetch_all($db, "SELECT recipe_images.path, recipe_images.caption, recipe_images.created_at, recipes.id AS recipe_id, recipes.title, recipes.cook_name, 'recipe' AS source_type FROM recipe_images JOIN recipes ON recipes.id = recipe_images.recipe_id ORDER BY recipe_images.created_at DESC");
+foreach ($homeHeroSlides = home_hero_slides() as $slide) {
+    $photoGallery[] = [
+        'path' => $slide['path'],
+        'caption' => $slide['caption'] ?? 'Foto Home',
+        'created_at' => $slide['created_at'] ?? '',
+        'recipe_id' => null,
+        'title' => 'Home page',
+        'cook_name' => 'Nonna Celeste',
+        'source_type' => 'home',
+    ];
+}
+usort($photoGallery, static fn (array $a, array $b): int => strcmp((string) ($b['created_at'] ?? ''), (string) ($a['created_at'] ?? '')));
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
+$loginCoverImage = login_cover_image_path();
 $pageViews = increment_page_views();
 $activeUsersCount = active_logged_in_users_count();
 $totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();

@@ -12,10 +12,44 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
+<?php if ($action === 'landing'): ?>
+    <main class="landing-page<?= $loginCoverImage ? ' has-cover' : '' ?>"<?php if ($loginCoverImage): ?> style="background-image: url(<?= e(media_url($loginCoverImage)) ?>);"<?php endif; ?>>
+        <section class="landing-shell">
+            <div class="landing-card">
+                <p class="landing-kicker">Benvenuti</p>
+                <h1 class="landing-title">WWW.NONNACELESTE.IT</h1>
+                <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste. L'immagine di sfondo può essere gestita soltanto da Admin e Super Admin.</p>
+                <form method="post" action="/?action=login" class="stack-form landing-form">
+                    <label>Email <input type="email" name="email" placeholder="email" required></label>
+                    <label>Password <input type="password" name="password" placeholder="password" required></label>
+                    <button type="submit">Entra nel sito</button>
+                </form>
+            </div>
+        </section>
+    </main>
+<?php else: ?>
 <header class="site-header">
-    <div class="site-branding">
-        <h1>WWW.NONNACELESTE.IT</h1>
-        <p>Archivio di ricette della Tradizione Familiare e le Moderne varianti</p>
+    <div class="site-header-top">
+        <div class="site-header-spacer" aria-hidden="true"></div>
+        <div class="site-branding">
+            <h1>WWW.NONNACELESTE.IT</h1>
+            <p>Archivio di ricette della Tradizione Familiare e le Moderne varianti</p>
+        </div>
+        <div class="auth-box">
+            <?php if ($user): ?>
+                <div class="user-panel user-panel-compact">
+                    <div class="user-summary">
+                        <strong><?= e($user['name']) ?></strong>
+                        <span class="role"><?= e($user['role']) ?></span>
+                    </div>
+                    <div class="user-links">
+                        <a href="/?action=profile">Area dati personali</a>
+                        <a href="/?action=profile#password-box">Cambio password</a>
+                        <a href="/?action=logout">Esci</a>
+                    </div>
+                </div>
+            <?php endif; ?>
+        </div>
     </div>
     <div class="site-stats">
         <span><strong>Pagine visitate:</strong> <?= (int) $pageViews ?></span>
@@ -23,26 +57,15 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <span><strong>Ricette inserite:</strong> <?= (int) $totalRecipes ?></span>
     </div>
     <nav>
-        <a href="/">Home</a>
+        <a href="/?action=home">Home</a>
+        <a href="/?action=book">Libro delle ricette</a>
         <a href="/?action=traditional">Ricette tradizionali</a>
         <a href="/?action=family">Ricette familiari</a>
+        <a href="/?action=photo_gallery">Photo Gallery</a>
         <a href="/?action=submit">Inserisci ricetta</a>
-        <a href="/?action=gallery">Galleria</a>
         <a href="/?action=contacts">Contatti</a>
         <?php if (is_admin()): ?><a href="/?action=admin">Admin</a><?php endif; ?>
     </nav>
-    <div class="auth-box">
-        <?php if ($user): ?>
-            <strong><?= e($user['name']) ?></strong> <span class="role"><?= e($user['role']) ?></span>
-            <a href="/?action=logout">Esci</a>
-        <?php else: ?>
-            <form method="post" action="/?action=login" class="login-form">
-                <input type="email" name="email" placeholder="email">
-                <input type="password" name="password" placeholder="password">
-                <button type="submit">Accedi</button>
-            </form>
-        <?php endif; ?>
-    </div>
 </header>
 
 <main class="container">
@@ -265,18 +288,61 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 </form>
             <?php endif; ?>
         </article>
-    <?php elseif ($action === 'gallery'): ?>
+    <?php elseif ($action === 'book'): ?>
         <section>
-            <h2 class="page-title">Galleria ricette</h2>
+            <h2 class="page-title">Libro delle ricette</h2>
+            <p class="helper-text section-intro">Una libreria completa con tutte le ricette pubblicate, indipendentemente dalla categoria.</p>
             <div class="recipe-grid">
-                <?php foreach ($galleryRecipes as $item): ?>
+                <?php foreach ($bookRecipes as $item): ?>
                     <article class="recipe-card">
                         <?php if (!empty($item['image_path'])): ?><img src="<?= e(media_url($item['image_path'])) ?>" alt="<?= e($item['title']) ?>"><?php endif; ?>
+                        <span class="tag"><?= e($item['visibility_type']) ?></span>
                         <h3><?= e($item['title']) ?></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
-                        <a href="/?action=recipe&id=<?= (int) $item['id'] ?>">Vai alla ricetta</a>
+                        <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
+                        <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
+                        <a href="/?action=recipe&id=<?= (int) $item['id'] ?>">Apri la ricetta</a>
                     </article>
                 <?php endforeach; ?>
+            </div>
+        </section>
+    <?php elseif ($action === 'photo_gallery'): ?>
+        <section>
+            <h2 class="page-title">Photo Gallery</h2>
+            <p class="helper-text section-intro">Qui sono raccolte tutte le foto presenti nel sito: immagini delle ricette e foto usate nella Home.</p>
+            <div class="photo-gallery-grid">
+                <?php foreach ($photoGallery as $photo): ?>
+                    <article class="photo-card">
+                        <img src="<?= e(media_url($photo['path'])) ?>" alt="<?= e($photo['caption'] ?: $photo['title']) ?>">
+                        <div class="photo-card-copy">
+                            <span class="tag"><?= $photo['source_type'] === 'home' ? 'home' : 'ricetta' ?></span>
+                            <h3><?= e($photo['caption'] ?: $photo['title']) ?></h3>
+                            <p><strong>Origine:</strong> <?= e($photo['title']) ?></p>
+                            <p><strong>Riferimento:</strong> <?= e($photo['cook_name']) ?></p>
+                            <?php if (!empty($photo['recipe_id'])): ?><a href="/?action=recipe&id=<?= (int) $photo['recipe_id'] ?>">Vai alla ricetta</a><?php endif; ?>
+                        </div>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        </section>
+    <?php elseif ($action === 'profile' && $user): ?>
+        <section>
+            <h2 class="page-title">Area dati personali</h2>
+            <div class="admin-grid">
+                <form method="post" action="/?action=update_profile" class="stack-form">
+                    <h3>Dati profilo</h3>
+                    <label>Nome completo <input type="text" name="name" value="<?= e($user['name']) ?>" required></label>
+                    <label>Email <input type="email" name="email" value="<?= e($user['email']) ?>" required></label>
+                    <label>Ruolo <input type="text" value="<?= e($user['role']) ?>" disabled></label>
+                    <button type="submit">Salva dati personali</button>
+                </form>
+                <form method="post" action="/?action=change_password" class="stack-form" id="password-box">
+                    <h3>Cambio password</h3>
+                    <label>Password attuale <input type="password" name="current_password" required></label>
+                    <label>Nuova password <input type="password" name="new_password" minlength="8" required></label>
+                    <label>Conferma nuova password <input type="password" name="confirm_password" minlength="8" required></label>
+                    <button type="submit">Aggiorna password</button>
+                </form>
             </div>
         </section>
     <?php elseif ($action === 'contacts'): ?>
@@ -329,6 +395,19 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     </label>
                     <p class="helper-text">Puoi selezionare più file nello stesso caricamento. Se non scegli nuovi file, viene salvata solo la grafica.</p>
                     <button type="submit">Carica e pubblica</button>
+                </form>
+                <form method="post" action="/?action=admin_save_login_cover" enctype="multipart/form-data" class="stack-form">
+                    <h3>Immagine pagina login</h3>
+                    <p class="helper-text">Questa foto viene mostrata a pagina piena prima del login al sito.</p>
+                    <label>Nuova immagine login
+                        <input type="file" name="login_cover_image" accept="image/jpeg,image/png,image/webp,image/gif" required>
+                    </label>
+                    <button type="submit">Aggiorna pagina login</button>
+                </form>
+                <form method="post" action="/?action=admin_reset_login_cover" class="stack-form">
+                    <h3>Ripristina pagina login</h3>
+                    <p class="helper-text">Rimuove la foto fullscreen e torna alla pagina bianca di accesso.</p>
+                    <button type="submit" class="secondary-button">Rimuovi foto login</button>
                 </form>
                 <form method="post" action="/?action=admin_reset_home_hero" class="stack-form">
                     <h3>Ripristina slider predefinito</h3>
@@ -425,6 +504,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section><h2>Pagina non trovata</h2></section>
     <?php endif; ?>
 </main>
+<?php endif; ?>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const heroSlider = document.querySelector('[data-hero-slider]');
