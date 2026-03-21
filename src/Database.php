@@ -35,10 +35,41 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS cooks (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    full_name TEXT NOT NULL UNIQUE,
+    birth_date TEXT,
+    phone TEXT,
+    email TEXT,
+    parent_names TEXT,
+    notes TEXT,
+    created_by_user_id INTEGER,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(created_by_user_id) REFERENCES users(id)
+);
+
+CREATE TABLE IF NOT EXISTS contact_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    phone TEXT,
+    request_type TEXT NOT NULL CHECK(request_type IN ('general','deletion','cook')),
+    message TEXT NOT NULL,
+    recipe_reference TEXT,
+    cook_full_name TEXT,
+    cook_birth_date TEXT,
+    cook_phone TEXT,
+    cook_email TEXT,
+    cook_parent_names TEXT,
+    status TEXT NOT NULL DEFAULT 'nuova',
+    created_at TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS recipes (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     title TEXT NOT NULL,
     cook_name TEXT NOT NULL,
+    cook_id INTEGER,
     author_user_id INTEGER NOT NULL,
     visibility_type TEXT NOT NULL CHECK(visibility_type IN ('tradizionale','variante','familiare')),
     holiday TEXT,
@@ -49,6 +80,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     approved_by_admin INTEGER NOT NULL DEFAULT 0,
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
+    FOREIGN KEY(cook_id) REFERENCES cooks(id),
     FOREIGN KEY(author_user_id) REFERENCES users(id)
 );
 
@@ -118,6 +150,29 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
 SQL);
+
+        self::ensureColumn($db, 'recipes', 'cook_id', 'INTEGER REFERENCES cooks(id)');
+        self::ensureColumn($db, 'contact_requests', 'phone', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'request_type', "TEXT NOT NULL DEFAULT 'general'");
+        self::ensureColumn($db, 'contact_requests', 'recipe_reference', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'cook_full_name', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'cook_birth_date', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'cook_phone', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'cook_email', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'cook_parent_names', 'TEXT');
+        self::ensureColumn($db, 'contact_requests', 'status', "TEXT NOT NULL DEFAULT 'nuova'");
+    }
+
+    private static function ensureColumn(PDO $db, string $table, string $column, string $definition): void
+    {
+        $columns = $db->query(sprintf('PRAGMA table_info(%s)', $table))->fetchAll();
+        foreach ($columns as $info) {
+            if (($info['name'] ?? null) === $column) {
+                return;
+            }
+        }
+
+        $db->exec(sprintf('ALTER TABLE %s ADD COLUMN %s %s', $table, $column, $definition));
     }
 
     public static function seed(PDO $db): void
@@ -164,11 +219,23 @@ SQL);
             }
         }
 
+        $cooksCount = (int) $db->query('SELECT COUNT(*) FROM cooks')->fetchColumn();
+        if ($cooksCount === 0) {
+            $cooks = [
+                ['Admin Ricette', '1968-05-14', '3331112222', 'admin.ricette@nonnaceleste.local', 'Figlio di Giovanni e Teresa', 'Cuoco storico del ricettario', 2],
+                ['Maria Rossi', '1988-09-02', '3334445555', 'maria@example.com', 'Figlia di Antonio e Lucia', 'Cuoca di famiglia', 3],
+            ];
+            $stmt = $db->prepare('INSERT INTO cooks(full_name,birth_date,phone,email,parent_names,notes,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?,?)');
+            foreach ($cooks as $cook) {
+                $stmt->execute([$cook[0], $cook[1], $cook[2], $cook[3], $cook[4], $cook[5], $cook[6], date(DATE_ATOM)]);
+            }
+        }
+
         $recipeCount = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();
         if ($recipeCount === 0) {
-            $db->exec("INSERT INTO recipes(title,cook_name,author_user_id,visibility_type,holiday,meal_time,course_type,execution_method,is_traditional,approved_by_admin,created_at,updated_at) VALUES
-            ('Lasagna di Carnevale','Admin Ricette',2,'tradizionale','Carnevale','pranzo','primo','Preparare il ragù, cuocere la besciamella, comporre gli strati e cuocere in forno fino a gratinatura.',1,1,'" . date(DATE_ATOM) . "','" . date(DATE_ATOM) . "'),
-            ('Pastiera di famiglia','Maria Rossi',3,'familiare','Pasqua','merenda','dolce','Impastare la frolla, preparare il ripieno con ricotta e grano, cuocere e far riposare 24 ore.',0,1,'" . date(DATE_ATOM) . "','" . date(DATE_ATOM) . "')");
+            $db->exec("INSERT INTO recipes(title,cook_name,cook_id,author_user_id,visibility_type,holiday,meal_time,course_type,execution_method,is_traditional,approved_by_admin,created_at,updated_at) VALUES
+            ('Lasagna di Carnevale','Admin Ricette',1,2,'tradizionale','Carnevale','pranzo','primo','Preparare il ragù, cuocere la besciamella, comporre gli strati e cuocere in forno fino a gratinatura.',1,1,'" . date(DATE_ATOM) . "','" . date(DATE_ATOM) . "'),
+            ('Pastiera di famiglia','Maria Rossi',2,3,'familiare','Pasqua','merenda','dolce','Impastare la frolla, preparare il ripieno con ricotta e grano, cuocere e far riposare 24 ore.',0,1,'" . date(DATE_ATOM) . "','" . date(DATE_ATOM) . "')");
             $db->exec("INSERT INTO recipe_ingredients(recipe_id,ingredient_id,quantity_value,quantity_unit) VALUES (1,48,500,'gr'),(1,118,300,'gr'),(1,126,100,'gr'),(2,116,400,'gr'),(2,38,250,'gr'),(2,125,3,'qb')");
             $db->exec("INSERT INTO recipe_utensils(recipe_id,utensil_id) VALUES (1,1),(1,4),(2,5),(2,19)");
             $db->exec("INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes) VALUES (1,2,35),(2,2,60)");

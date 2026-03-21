@@ -28,7 +28,10 @@ img { max-width: 100%; display: block; }
 .stack-form label, .stack-form fieldset { display: grid; gap: .5rem; }
 .stack-form input, .stack-form select, .stack-form textarea, .stack-form button { padding: .8rem; border: 1px solid var(--border); border-radius: 10px; }
 .stack-form button { background: var(--accent); color: white; font-weight: bold; cursor: pointer; }
-.inline-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: .75rem; margin-bottom: .5rem; }
+.secondary-button { background: #f2d6ce !important; color: var(--accent-dark) !important; }
+.inline-grid { display: grid; grid-template-columns: minmax(0, 2fr) 140px 110px; gap: .75rem; margin-bottom: .5rem; align-items: start; }
+.ingredient-picker { display: grid; gap: .45rem; }
+.filter-input, .ingredient-search { width: 100%; }
 .filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .filters select, .filters button { padding: .7rem; border-radius: 10px; border: 1px solid var(--border); }
 .recipe-detail { background: white; padding: 1.5rem; border: 1px solid var(--border); border-radius: 18px; }
@@ -40,12 +43,21 @@ img { max-width: 100%; display: block; }
 .flash.error { border-left: 5px solid #c53030; }
 .tag, .role { display: inline-block; background: #f2d6ce; color: var(--accent-dark); padding: .25rem .65rem; border-radius: 999px; font-size: .85rem; }
 .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; }
+.selection-layout { display: grid; grid-template-columns: 1.2fr .8fr; gap: 1rem; }
+.selection-column { display: grid; gap: .75rem; }
+.utensil-options { max-height: 320px; overflow: auto; border: 1px solid var(--border); border-radius: 12px; padding: .75rem; display: grid; gap: .5rem; background: #fffdfb; }
+.checkbox-chip { display: flex; align-items: center; gap: .6rem; padding: .55rem .7rem; border: 1px solid var(--border); border-radius: 999px; }
+.selected-column { align-content: start; }
+.selected-utensils { min-height: 80px; border: 1px dashed var(--border); border-radius: 12px; padding: .75rem; background: #fffdfb; }
+.selected-utensils.empty { color: var(--muted); }
+.plain-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .85rem; }
 .small-form { margin-top: 1rem; }
 @media (max-width: 860px) {
-  .hero, .grid-buttons { grid-template-columns: 1fr; }
+  .hero, .grid-buttons, .selection-layout { grid-template-columns: 1fr; }
+  .inline-grid { grid-template-columns: 1fr; }
 }
 @media print {
-  .site-header, .print-actions, form, nav { display: none !important; }
+  .site-header, .print-actions, form, nav, script { display: none !important; }
   body { background: white; }
   .container { width: 100%; margin: 0; }
   .recipe-detail { border: none; box-shadow: none; }

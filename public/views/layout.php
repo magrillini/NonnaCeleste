@@ -91,10 +91,17 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php elseif ($action === 'submit'): ?>
         <section>
             <h2>Inserimento ricetta</h2>
-            <p>Gli utenti possono inserire nuove ricette e varianti; l'amministratore può pubblicare anche ricette tradizionali e aggiornare le festività in calendario.</p>
+            <p>Gli ingredienti si possono aggiungere uno alla volta, gli utensili restano visibili solo se selezionati e il cuoco deve essere scelto dall'elenco approvato dall'admin.</p>
             <form method="post" action="/?action=save_recipe" enctype="multipart/form-data" class="stack-form">
                 <label>Nome ricetta <input type="text" name="title" required></label>
-                <label>Cuoco <input type="text" name="cook_name" required value="<?= $user ? e($user['name']) : '' ?>"></label>
+                <label>Cuoco
+                    <select name="cook_id" required>
+                        <option value="">Seleziona cuoco approvato</option>
+                        <?php foreach ($cooks as $cook): ?>
+                            <option value="<?= (int) $cook['id'] ?>"><?= e($cook['full_name']) ?><?= $cook['birth_date'] ? ' - ' . e($cook['birth_date']) : '' ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
                 <label>Tipologia
                     <select name="visibility_type">
                         <option value="familiare">Ricetta familiare</option>
@@ -120,14 +127,17 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     </select>
                 </label>
 
-                <fieldset>
+                <fieldset class="dynamic-ingredients" data-next-index="1">
                     <legend>Ingredienti</legend>
-                    <?php for ($i = 0; $i < 5; $i++): ?>
-                        <div class="inline-grid">
-                            <select name="ingredients[]">
-                                <option value="">Seleziona ingrediente</option>
-                                <?php foreach ($ingredients as $ingredient): ?><option value="<?= (int) $ingredient['id'] ?>"><?= e($ingredient['name']) ?></option><?php endforeach; ?>
-                            </select>
+                    <div class="ingredient-list">
+                        <div class="ingredient-row inline-grid" data-index="0">
+                            <div class="ingredient-picker">
+                                <input type="text" class="ingredient-search" placeholder="Cerca ingrediente (minimo 3 caratteri)" autocomplete="off">
+                                <select name="ingredients[]" class="ingredient-select">
+                                    <option value="">Seleziona ingrediente</option>
+                                    <?php foreach ($ingredients as $ingredient): ?><option value="<?= (int) $ingredient['id'] ?>"><?= e($ingredient['name']) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
                             <input type="number" step="0.1" min="0" name="ingredient_quantities[]" placeholder="Quantità">
                             <select name="ingredient_units[]">
                                 <option value="gr">gr</option>
@@ -135,14 +145,47 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                                 <option value="qb">qb</option>
                             </select>
                         </div>
-                    <?php endfor; ?>
+                    </div>
+                    <button type="button" class="secondary-button add-ingredient-button">Aggiungi ingrediente</button>
+                    <template id="ingredient-row-template">
+                        <div class="ingredient-row inline-grid" data-index="__INDEX__">
+                            <div class="ingredient-picker">
+                                <input type="text" class="ingredient-search" placeholder="Cerca ingrediente (minimo 3 caratteri)" autocomplete="off">
+                                <select name="ingredients[]" class="ingredient-select">
+                                    <option value="">Seleziona ingrediente</option>
+                                    <?php foreach ($ingredients as $ingredient): ?><option value="<?= (int) $ingredient['id'] ?>"><?= e($ingredient['name']) ?></option><?php endforeach; ?>
+                                </select>
+                            </div>
+                            <input type="number" step="0.1" min="0" name="ingredient_quantities[]" placeholder="Quantità">
+                            <select name="ingredient_units[]">
+                                <option value="gr">gr</option>
+                                <option value="cl">cl</option>
+                                <option value="qb">qb</option>
+                            </select>
+                        </div>
+                    </template>
                 </fieldset>
 
                 <fieldset>
                     <legend>Utensili</legend>
-                    <select name="utensils[]" multiple size="8">
-                        <?php foreach ($utensils as $utensil): ?><option value="<?= (int) $utensil['id'] ?>"><?= e($utensil['name']) ?></option><?php endforeach; ?>
-                    </select>
+                    <div class="selection-layout">
+                        <div class="selection-column">
+                            <label for="utensil-search">Ricerca utensili</label>
+                            <input type="text" id="utensil-search" class="filter-input" placeholder="Scrivi per filtrare gli utensili">
+                            <div class="utensil-options">
+                                <?php foreach ($utensils as $utensil): ?>
+                                    <label class="checkbox-chip utensil-option" data-name="<?= e(mb_strtolower($utensil['name'])) ?>">
+                                        <input type="checkbox" name="utensils[]" value="<?= (int) $utensil['id'] ?>">
+                                        <span><?= e($utensil['name']) ?></span>
+                                    </label>
+                                <?php endforeach; ?>
+                            </div>
+                        </div>
+                        <div class="selection-column selected-column">
+                            <h3>Utensili selezionati</h3>
+                            <div class="selected-utensils empty">Nessun utensile selezionato.</div>
+                        </div>
+                    </div>
                 </fieldset>
 
                 <fieldset>
@@ -245,14 +288,33 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php elseif ($action === 'contacts'): ?>
         <section>
             <h2>Contatti e richieste</h2>
-            <p>Le richieste di cancellazione vengono inviate via mail e gestite dall'amministratore.</p>
-            <form class="stack-form" action="mailto:admin@nonnaceleste.local" method="post" enctype="text/plain">
-                <label>Nome <input type="text" name="nome" required></label>
-                <label>Email <input type="email" name="email" required></label>
-                <label>ID o nome ricetta da cancellare <input type="text" name="ricetta" required></label>
-                <label>Motivazione dettagliata <textarea name="motivazione" rows="6" required></textarea></label>
-                <button type="submit">Invia richiesta via mail</button>
-            </form>
+            <p>Da questa pagina si possono inviare richieste generali, cancellazioni ricette e richieste per inserire un nuovo cuoco nell'elenco gestito dall'admin.</p>
+            <div class="admin-grid">
+                <form class="stack-form" action="/?action=save_contact_request" method="post">
+                    <input type="hidden" name="request_type" value="deletion">
+                    <h3>Richiesta cancellazione ricetta</h3>
+                    <label>Nome <input type="text" name="name" required></label>
+                    <label>Email <input type="email" name="email" required></label>
+                    <label>Telefono <input type="text" name="phone"></label>
+                    <label>ID o nome ricetta da cancellare <input type="text" name="recipe_reference" required></label>
+                    <label>Motivazione dettagliata <textarea name="message" rows="6" required></textarea></label>
+                    <button type="submit">Invia richiesta</button>
+                </form>
+                <form class="stack-form" action="/?action=save_contact_request" method="post">
+                    <input type="hidden" name="request_type" value="cook">
+                    <h3>Richiesta inserimento cuoco</h3>
+                    <label>Richiedente <input type="text" name="name" required></label>
+                    <label>Email richiedente <input type="email" name="email" required></label>
+                    <label>Telefono richiedente <input type="text" name="phone"></label>
+                    <label>Nome e cognome cuoco <input type="text" name="cook_full_name" required></label>
+                    <label>Data di nascita <input type="date" name="cook_birth_date"></label>
+                    <label>Telefono cuoco <input type="text" name="cook_phone"></label>
+                    <label>Mail cuoco <input type="email" name="cook_email"></label>
+                    <label>Figlio/a di... Babbo e Mamma <input type="text" name="cook_parent_names" placeholder="Es. figlia di Mario Rossi e Anna Verdi"></label>
+                    <label>Dettagli richiesta <textarea name="message" rows="5" required></textarea></label>
+                    <button type="submit">Invia richiesta all'admin</button>
+                </form>
+            </div>
         </section>
     <?php elseif ($action === 'admin' && is_admin()): ?>
         <section>
@@ -270,12 +332,142 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     <input type="text" name="name" placeholder="Nuovo utensile">
                     <button type="submit">Aggiungi utensile</button>
                 </form>
+                <form method="post" action="/?action=admin_add_cook" class="stack-form">
+                    <h3>Aggiungi cuoco approvato</h3>
+                    <label>Nome e cognome <input type="text" name="full_name" required></label>
+                    <label>Data di nascita <input type="date" name="birth_date"></label>
+                    <label>Telefono <input type="text" name="phone"></label>
+                    <label>Mail <input type="email" name="email"></label>
+                    <label>Figlio/a di... <input type="text" name="parent_names"></label>
+                    <label>Note admin <textarea name="notes" rows="4"></textarea></label>
+                    <button type="submit">Salva cuoco</button>
+                </form>
             </div>
-            <p>Solo admin e superadmin possono estendere i cataloghi. Il superadmin rimane il proprietario del sistema.</p>
+            <div class="admin-grid">
+                <article class="recipe-card">
+                    <h3>Cuochi approvati</h3>
+                    <ul class="plain-list">
+                        <?php foreach ($cooks as $cook): ?>
+                            <li><strong><?= e($cook['full_name']) ?></strong><br><small><?= e(trim(($cook['birth_date'] ?: '') . ' ' . ($cook['parent_names'] ? '• ' . $cook['parent_names'] : ''))) ?></small></li>
+                        <?php endforeach; ?>
+                    </ul>
+                </article>
+                <article class="recipe-card">
+                    <h3>Richieste contatti</h3>
+                    <ul class="plain-list">
+                        <?php foreach ($contactRequests as $request): ?>
+                            <li>
+                                <strong><?= e($request['name']) ?></strong> - <?= e($request['request_type']) ?>
+                                <br><small><?= e($request['email']) ?><?= $request['phone'] ? ' • ' . e($request['phone']) : '' ?><?= $request['status'] ? ' • ' . e($request['status']) : '' ?></small>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </article>
+            </div>
+            <?php if ($cookRequests): ?>
+                <h3>Richieste nuovi cuochi</h3>
+                <div class="recipe-grid">
+                    <?php foreach ($cookRequests as $request): ?>
+                        <form method="post" action="/?action=admin_add_cook" class="stack-form recipe-card">
+                            <input type="hidden" name="contact_request_id" value="<?= (int) $request['id'] ?>">
+                            <h4><?= e($request['cook_full_name'] ?: 'Nuovo cuoco') ?></h4>
+                            <label>Nome e cognome <input type="text" name="full_name" value="<?= e($request['cook_full_name'] ?: '') ?>" required></label>
+                            <label>Data di nascita <input type="date" name="birth_date" value="<?= e($request['cook_birth_date'] ?: '') ?>"></label>
+                            <label>Telefono <input type="text" name="phone" value="<?= e($request['cook_phone'] ?: '') ?>"></label>
+                            <label>Mail <input type="email" name="email" value="<?= e($request['cook_email'] ?: '') ?>"></label>
+                            <label>Figlio/a di... <input type="text" name="parent_names" value="<?= e($request['cook_parent_names'] ?: '') ?>"></label>
+                            <label>Note admin <textarea name="notes" rows="4"><?= e($request['message']) ?></textarea></label>
+                            <button type="submit">Approva e inserisci cuoco</button>
+                        </form>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
+            <p>Solo admin e superadmin possono estendere i cataloghi e approvare i cuochi richiesti dalla pagina contatti.</p>
         </section>
     <?php else: ?>
         <section><h2>Pagina non trovata</h2></section>
     <?php endif; ?>
 </main>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const ingredientFieldset = document.querySelector('.dynamic-ingredients');
+    if (ingredientFieldset) {
+        const list = ingredientFieldset.querySelector('.ingredient-list');
+        const template = document.getElementById('ingredient-row-template');
+        const addButton = ingredientFieldset.querySelector('.add-ingredient-button');
+
+        const wireIngredientRow = (row) => {
+            const search = row.querySelector('.ingredient-search');
+            const select = row.querySelector('.ingredient-select');
+            const allOptions = Array.from(select.options).map(option => ({ value: option.value, label: option.textContent }));
+
+            search.addEventListener('input', function () {
+                const term = this.value.trim().toLowerCase();
+                const currentValue = select.value;
+                select.innerHTML = '';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = term.length >= 3 ? 'Seleziona ingrediente filtrato' : 'Digita almeno 3 caratteri';
+                select.appendChild(defaultOption);
+
+                const filtered = term.length >= 3
+                    ? allOptions.filter(option => option.value === '' || option.label.toLowerCase().includes(term))
+                    : allOptions.filter(option => option.value === '');
+
+                filtered.forEach(option => {
+                    if (option.value === '') {
+                        return;
+                    }
+                    const element = document.createElement('option');
+                    element.value = option.value;
+                    element.textContent = option.label;
+                    if (option.value === currentValue) {
+                        element.selected = true;
+                    }
+                    select.appendChild(element);
+                });
+            });
+        };
+
+        ingredientFieldset.querySelectorAll('.ingredient-row').forEach(wireIngredientRow);
+        addButton.addEventListener('click', function () {
+            const index = Number(ingredientFieldset.dataset.nextIndex || '1');
+            const html = template.innerHTML.replace(/__INDEX__/g, String(index));
+            list.insertAdjacentHTML('beforeend', html);
+            ingredientFieldset.dataset.nextIndex = String(index + 1);
+            wireIngredientRow(list.lastElementChild);
+        });
+    }
+
+    const utensilSearch = document.getElementById('utensil-search');
+    if (utensilSearch) {
+        const options = Array.from(document.querySelectorAll('.utensil-option'));
+        const selectedBox = document.querySelector('.selected-utensils');
+        const renderSelected = () => {
+            const selected = options
+                .filter(option => option.querySelector('input').checked)
+                .map(option => option.querySelector('span').textContent);
+            if (selected.length === 0) {
+                selectedBox.textContent = 'Nessun utensile selezionato.';
+                selectedBox.classList.add('empty');
+                return;
+            }
+            selectedBox.classList.remove('empty');
+            selectedBox.innerHTML = selected.map(label => `<span class="tag">${label}</span>`).join(' ');
+        };
+
+        utensilSearch.addEventListener('input', function () {
+            const term = this.value.trim().toLowerCase();
+            options.forEach(option => {
+                const matches = option.dataset.name.includes(term);
+                option.style.display = matches ? 'flex' : 'none';
+            });
+        });
+
+        options.forEach(option => option.querySelector('input').addEventListener('change', renderSelected));
+        renderSelected();
+    }
+});
+</script>
 </body>
 </html>

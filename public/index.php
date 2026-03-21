@@ -30,13 +30,27 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/?action=submit');
     }
 
+    $cookId = (int) post('cook_id', 0);
+    $cook = null;
+    if ($cookId > 0) {
+        $cookStmt = $db->prepare('SELECT * FROM cooks WHERE id = ?');
+        $cookStmt->execute([$cookId]);
+        $cook = $cookStmt->fetch();
+    }
+
+    if (!$cook) {
+        flash('error', 'Seleziona un cuoco presente nell\'elenco approvato dall\'admin.');
+        redirect('/?action=submit');
+    }
+
     $db->beginTransaction();
     try {
-        $stmt = $db->prepare('INSERT INTO recipes(title,cook_name,author_user_id,visibility_type,holiday,meal_time,course_type,execution_method,is_traditional,approved_by_admin,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)');
+        $stmt = $db->prepare('INSERT INTO recipes(title,cook_name,cook_id,author_user_id,visibility_type,holiday,meal_time,course_type,execution_method,is_traditional,approved_by_admin,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)');
         $visibility = post('visibility_type', 'familiare');
         $stmt->execute([
             post('title'),
-            post('cook_name'),
+            $cook['full_name'],
+            $cook['id'],
             $user['id'],
             $visibility,
             post('holiday') ?: null,
@@ -60,8 +74,11 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 ->execute([$recipeId, (int) $ingredientId, $quantityValue, $quantityUnit]);
         }
 
-        foreach ((array) ($_POST['utensils'] ?? []) as $utensilId) {
-            $db->prepare('INSERT INTO recipe_utensils(recipe_id,utensil_id) VALUES(?,?)')->execute([$recipeId, (int) $utensilId]);
+        foreach (array_unique(array_map('intval', (array) ($_POST['utensils'] ?? []))) as $utensilId) {
+            if ($utensilId <= 0) {
+                continue;
+            }
+            $db->prepare('INSERT INTO recipe_utensils(recipe_id,utensil_id) VALUES(?,?)')->execute([$recipeId, $utensilId]);
         }
 
         foreach ((array) ($_POST['cooking_methods'] ?? []) as $index => $methodId) {
@@ -105,6 +122,28 @@ if ($action === 'save_comment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect('/?action=recipe&id=' . $recipeId);
 }
 
+if ($action === 'save_contact_request' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $requestType = post('request_type', 'general');
+    $db->prepare('INSERT INTO contact_requests(name,email,phone,request_type,message,recipe_reference,cook_full_name,cook_birth_date,cook_phone,cook_email,cook_parent_names,status,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([
+            trim((string) post('name')),
+            trim((string) post('email')),
+            trim((string) post('phone')),
+            $requestType,
+            trim((string) post('message')),
+            trim((string) post('recipe_reference')) ?: null,
+            trim((string) post('cook_full_name')) ?: null,
+            trim((string) post('cook_birth_date')) ?: null,
+            trim((string) post('cook_phone')) ?: null,
+            trim((string) post('cook_email')) ?: null,
+            trim((string) post('cook_parent_names')) ?: null,
+            'nuova',
+            date(DATE_ATOM),
+        ]);
+    flash('success', $requestType === 'cook' ? 'Richiesta per nuovo cuoco inviata all\'admin.' : 'Richiesta inviata correttamente.');
+    redirect('/?action=contacts');
+}
+
 if ($action === 'admin_add_catalog' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     $table = post('catalog_type') === 'utensil' ? 'utensils' : 'ingredients';
     $name = trim((string) post('name'));
@@ -115,9 +154,40 @@ if ($action === 'admin_add_catalog' && $_SERVER['REQUEST_METHOD'] === 'POST' && 
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    $fullName = trim((string) post('full_name'));
+    if ($fullName === '') {
+        flash('error', 'Il nome del cuoco è obbligatorio.');
+        redirect('/?action=admin');
+    }
+
+    $db->prepare('INSERT INTO cooks(full_name,birth_date,phone,email,parent_names,notes,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?,?)')
+        ->execute([
+            $fullName,
+            trim((string) post('birth_date')) ?: null,
+            trim((string) post('phone')) ?: null,
+            trim((string) post('email')) ?: null,
+            trim((string) post('parent_names')) ?: null,
+            trim((string) post('notes')) ?: null,
+            (int) $user['id'],
+            date(DATE_ATOM),
+        ]);
+
+    $contactRequestId = (int) post('contact_request_id', 0);
+    if ($contactRequestId > 0) {
+        $db->prepare("UPDATE contact_requests SET status = 'gestita' WHERE id = ?")->execute([$contactRequestId]);
+    }
+
+    flash('success', 'Cuoco aggiunto all\'elenco.');
+    redirect('/?action=admin');
+}
+
 $ingredients = fetch_all($db, 'SELECT * FROM ingredients ORDER BY name');
 $utensils = fetch_all($db, 'SELECT * FROM utensils ORDER BY name');
 $cookingMethods = fetch_all($db, 'SELECT * FROM cooking_methods ORDER BY name');
+$cooks = fetch_all($db, 'SELECT * FROM cooks ORDER BY full_name');
+$contactRequests = is_admin() ? fetch_all($db, 'SELECT * FROM contact_requests ORDER BY created_at DESC') : [];
+$cookRequests = is_admin() ? fetch_all($db, "SELECT * FROM contact_requests WHERE request_type = 'cook' ORDER BY created_at DESC") : [];
 
 $recipesSql = 'SELECT recipes.*, users.name AS author_name FROM recipes JOIN users ON users.id = recipes.author_user_id WHERE 1=1';
 $params = [];
