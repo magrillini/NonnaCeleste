@@ -320,18 +320,47 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section>
             <h2>Pannello amministrazione</h2>
             <div class="admin-grid">
-                <form method="post" action="/?action=admin_update_home_hero" enctype="multipart/form-data" class="stack-form">
-                    <h3>Foto Home</h3>
-                    <p class="helper-text">Carica una nuova immagine hero per la Home. Formati supportati: JPG, PNG, WEBP, GIF.</p>
-                    <img src="<?= e($homeHeroImage) ?>" alt="Anteprima foto Home" class="admin-preview">
-                    <label>Nuova foto Home <input type="file" name="home_hero_image" accept="image/jpeg,image/png,image/webp,image/gif" required></label>
+                <form method="post" action="/?action=admin_save_home_media" enctype="multipart/form-data" class="stack-form">
+                    <h3>Slider e grafica Home</h3>
+                    <p class="helper-text">Carica una o più foto insieme e scegli la grafica della Home. Le immagini scorrono automaticamente con dissolvenza.</p>
+                    <label>Grafica Home
+                        <select name="home_theme">
+                            <?php foreach ($homeThemeOptions as $themeKey => $themeLabel): ?>
+                                <option value="<?= e($themeKey) ?>" <?= $homeHeroTheme === $themeKey ? 'selected' : '' ?>><?= e($themeLabel) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label>Nuove foto Home
+                        <input type="file" name="home_slides[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                    </label>
+                    <p class="helper-text">Puoi selezionare più file nello stesso caricamento. Se non scegli nuovi file, viene salvata solo la grafica.</p>
                     <button type="submit">Carica e pubblica</button>
                 </form>
                 <form method="post" action="/?action=admin_reset_home_hero" class="stack-form">
-                    <h3>Ripristina immagine predefinita</h3>
-                    <p class="helper-text">Usa questa opzione per tornare alla foto standard della Home senza cancellare altre sezioni del sito.</p>
+                    <h3>Ripristina slider predefinito</h3>
+                    <p class="helper-text">Elimina tutte le foto caricate e torna all'immagine standard della Home.</p>
                     <button type="submit" class="secondary-button">Ripristina foto default</button>
                 </form>
+            </div>
+            <div class="stack-form">
+                <h3>Foto attuali della Home</h3>
+                <p class="helper-text">Queste immagini vengono usate nello slider automatico della Home. Puoi cancellarle singolarmente.</p>
+                <div class="home-slide-admin-grid">
+                    <?php foreach ($homeHeroSlides as $slide): ?>
+                        <article class="recipe-card home-slide-admin-card">
+                            <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
+                            <p><strong><?= e($slide['caption'] ?: 'Foto Home') ?></strong></p>
+                            <?php if (!empty($slide['id'])): ?>
+                                <form method="post" action="/?action=admin_delete_home_slide" class="stack-form small-form">
+                                    <input type="hidden" name="slide_id" value="<?= (int) $slide['id'] ?>">
+                                    <button type="submit" class="secondary-button">Elimina foto</button>
+                                </form>
+                            <?php else: ?>
+                                <p class="helper-text">Immagine predefinita di fallback.</p>
+                            <?php endif; ?>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
             </div>
             <div class="admin-grid">
                 <form method="post" action="/?action=admin_add_catalog" class="stack-form">
@@ -404,6 +433,29 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 </main>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const heroSlider = document.querySelector('[data-hero-slider]');
+    if (heroSlider) {
+        const slides = Array.from(heroSlider.querySelectorAll('[data-hero-slide]'));
+        const dots = Array.from(heroSlider.querySelectorAll('[data-hero-dot]'));
+        let activeIndex = 0;
+
+        const showSlide = (index) => {
+            slides.forEach((slide, slideIndex) => slide.classList.toggle('is-active', slideIndex === index));
+            dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === index));
+            activeIndex = index;
+        };
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => showSlide(index));
+        });
+
+        if (slides.length > 1) {
+            window.setInterval(() => {
+                showSlide((activeIndex + 1) % slides.length);
+            }, 4000);
+        }
+    }
+
     const ingredientFieldset = document.querySelector('.dynamic-ingredients');
     if (ingredientFieldset) {
         const list = ingredientFieldset.querySelector('.ingredient-list');

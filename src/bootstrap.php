@@ -10,6 +10,7 @@ define('STORAGE_PATH', BASE_PATH . '/storage');
 
 require_once __DIR__ . '/Database.php';
 require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/HomeHero.php';
 
 $db = Database::connection();
 Database::migrate($db);

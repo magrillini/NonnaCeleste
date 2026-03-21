@@ -182,24 +182,32 @@ if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_
     redirect('/?action=admin');
 }
 
-if ($action === 'admin_update_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     try {
-        $didUpload = save_home_hero_image($_FILES['home_hero_image'] ?? [], (int) $user['id']);
-        if ($didUpload) {
-            flash('success', 'Foto Home aggiornata correttamente.');
+        $savedSlides = save_home_slides($_FILES['home_slides'] ?? [], (int) $user['id']);
+        set_home_theme((string) post('home_theme', 'classic'));
+
+        if ($savedSlides > 0) {
+            flash('success', sprintf('Home aggiornata: %d foto caricate e grafica salvata.', $savedSlides));
         } else {
-            flash('error', 'Seleziona un\'immagine da caricare.');
+            flash('success', 'Grafica Home aggiornata correttamente.');
         }
     } catch (Throwable $e) {
-        flash('error', 'Errore upload Home: ' . $e->getMessage());
+        flash('error', 'Errore aggiornamento Home: ' . $e->getMessage());
     }
 
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    delete_home_slide((int) post('slide_id', 0));
+    flash('success', 'Foto Home eliminata.');
+    redirect('/?action=admin');
+}
+
 if ($action === 'admin_reset_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
-    reset_home_hero_image();
-    flash('success', 'Foto Home ripristinata all\'immagine predefinita.');
+    reset_home_slides();
+    flash('success', 'Slider Home ripristinato alle immagini predefinite.');
     redirect('/?action=admin');
 }
 
@@ -245,6 +253,8 @@ if ($action === 'recipe' && ($recipeId = (int) query('id'))) {
 }
 
 $galleryRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook_name, MIN(recipe_images.path) AS image_path FROM recipes LEFT JOIN recipe_images ON recipe_images.recipe_id = recipes.id GROUP BY recipes.id ORDER BY recipes.created_at DESC');
-$homeHeroImage = home_hero_image_path();
+$homeHeroSlides = home_hero_slides();
+$homeHeroTheme = home_theme();
+$homeThemeOptions = home_theme_options();
 
 include __DIR__ . '/views/layout.php';
