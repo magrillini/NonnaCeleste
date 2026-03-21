@@ -47,7 +47,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
     <?php if ($action === 'home'): ?>
         <section class="hero">
-            <img src="<?= e($homeHeroImage) ?>" alt="Nonna Celeste in cucina">
+            <img src="<?= e(media_url($homeHeroImage)) ?>" alt="Nonna Celeste in cucina">
             <div>
                 <h2>La cucina di Nonna Celeste</h2>
                 <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
@@ -245,7 +245,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
             <h3>Galleria</h3>
             <div class="gallery-grid">
-                <?php foreach ($gallery as $image): ?><img src="/<?= e($image['path']) ?>" alt="Foto ricetta <?= e($recipe['title']) ?>"><?php endforeach; ?>
+                <?php foreach ($gallery as $image): ?><img src="<?= e(media_url($image['path'])) ?>" alt="Foto ricetta <?= e($recipe['title']) ?>"><?php endforeach; ?>
             </div>
 
             <h3>Commenti</h3>
@@ -277,7 +277,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <div class="recipe-grid">
                 <?php foreach ($galleryRecipes as $item): ?>
                     <article class="recipe-card">
-                        <?php if (!empty($item['image_path'])): ?><img src="/<?= e($item['image_path']) ?>" alt="<?= e($item['title']) ?>"><?php endif; ?>
+                        <?php if (!empty($item['image_path'])): ?><img src="<?= e(media_url($item['image_path'])) ?>" alt="<?= e($item['title']) ?>"><?php endif; ?>
                         <h3><?= e($item['title']) ?></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <a href="/?action=recipe&id=<?= (int) $item['id'] ?>">Vai alla ricetta</a>
@@ -348,7 +348,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <div class="home-slide-admin-grid">
                     <?php foreach ($homeHeroSlides as $slide): ?>
                         <article class="recipe-card home-slide-admin-card">
-                            <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
+                            <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
                             <p><strong><?= e($slide['caption'] ?: 'Foto Home') ?></strong></p>
                             <?php if (!empty($slide['id'])): ?>
                                 <form method="post" action="/?action=admin_delete_home_slide" class="stack-form small-form">

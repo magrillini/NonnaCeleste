@@ -5,6 +5,21 @@ $action = query('action', 'home');
 $user = current_user();
 $flash = consume_flash();
 
+if ($action === 'media') {
+    $mediaPath = media_storage_path((string) query('path', ''));
+    if ($mediaPath === null) {
+        http_response_code(404);
+        exit('File non trovato.');
+    }
+
+    $mimeType = mime_content_type($mediaPath) ?: 'application/octet-stream';
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . (string) filesize($mediaPath));
+    header('Cache-Control: public, max-age=86400');
+    readfile($mediaPath);
+    exit;
+}
+
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $db->prepare('SELECT * FROM users WHERE email = ?');
     $stmt->execute([post('email')]);
