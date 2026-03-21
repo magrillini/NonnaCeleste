@@ -65,6 +65,101 @@ function consume_flash(): ?array
     return $flash;
 }
 
+function current_request_path(): string
+{
+    $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    $path = parse_url($requestUri, PHP_URL_PATH);
+    return is_string($path) && $path !== '' ? $path : '/';
+}
+
+function register_active_session(?array $user): void
+{
+    global $db;
+
+    $sessionId = session_id();
+    if ($sessionId === '') {
+        return;
+    }
+
+    $db->prepare('DELETE FROM active_sessions WHERE last_seen < ?')
+        ->execute([time() - 900]);
+
+    $db->prepare('INSERT INTO active_sessions(session_id,user_id,current_path,last_seen) VALUES(?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET user_id = excluded.user_id, current_path = excluded.current_path, last_seen = excluded.last_seen')
+        ->execute([$sessionId, $user['id'] ?? null, current_request_path(), time()]);
+}
+
+function unregister_active_session(): void
+{
+    global $db;
+
+    $sessionId = session_id();
+    if ($sessionId === '') {
+        return;
+    }
+
+    $db->prepare('DELETE FROM active_sessions WHERE session_id = ?')->execute([$sessionId]);
+}
+
+function increment_page_views(): int
+{
+    $current = (int) (site_setting('page_views', '0') ?? '0');
+    $updated = $current + 1;
+    set_site_setting('page_views', (string) $updated);
+    return $updated;
+}
+
+function active_logged_in_users_count(): int
+{
+    global $db;
+
+    return (int) $db->query('SELECT COUNT(DISTINCT user_id) FROM active_sessions WHERE user_id IS NOT NULL AND last_seen >= ' . (time() - 900))->fetchColumn();
+}
+
+function media_url(?string $path): string
+{
+    $trimmedPath = trim((string) $path);
+    if ($trimmedPath === '') {
+        return '';
+    }
+
+    if (preg_match('#^https?://#i', $trimmedPath) === 1) {
+        return $trimmedPath;
+    }
+
+    $normalizedPath = ltrim($trimmedPath, '/');
+    if (str_starts_with($normalizedPath, 'storage/')) {
+        return '/?action=media&path=' . rawurlencode($normalizedPath);
+    }
+
+    return str_starts_with($trimmedPath, '/') ? $trimmedPath : '/' . $normalizedPath;
+}
+
+function media_storage_path(?string $path): ?string
+{
+    $trimmedPath = ltrim(trim((string) $path), '/');
+    if ($trimmedPath === '' || !str_starts_with($trimmedPath, 'storage/')) {
+        return null;
+    }
+
+    $relativePath = substr($trimmedPath, strlen('storage/'));
+    if ($relativePath === '' || str_contains($relativePath, '..')) {
+        return null;
+    }
+
+    $absolutePath = STORAGE_PATH . '/' . ltrim($relativePath, '/');
+    $realPath = realpath($absolutePath);
+    $storageRoot = realpath(STORAGE_PATH);
+    if ($realPath === false || $storageRoot === false) {
+        return null;
+    }
+
+    if (!str_starts_with($realPath, $storageRoot . DIRECTORY_SEPARATOR)) {
+        return null;
+    }
+
+    return is_file($realPath) ? $realPath : null;
+}
+
 function save_uploaded_images(array $files, int $recipeId, int $userId): void
 {
     global $db;
@@ -86,7 +181,7 @@ function save_uploaded_images(array $files, int $recipeId, int $userId): void
         $extension = pathinfo($files['name'][$index] ?? 'jpg', PATHINFO_EXTENSION) ?: 'jpg';
         $name = sprintf('recipe_%d_%s.%s', $recipeId, uniqid('', true), $extension);
         $destination = $targetDir . '/' . $name;
-        if (move_uploaded_file($tmpPath, $destination)) {
+        if (move_uploaded_file_safely($tmpPath, $destination)) {
             $stmt->execute([$recipeId, 'storage/gallery/' . $name, null, $userId, date(DATE_ATOM)]);
         }
     }

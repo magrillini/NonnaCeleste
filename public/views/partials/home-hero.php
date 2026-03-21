@@ -2,7 +2,7 @@
     <div class="hero-media" data-hero-slider>
         <?php foreach ($homeHeroSlides as $index => $slide): ?>
             <figure class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide>
-                <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home Nonna Celeste') ?>">
+                <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home Nonna Celeste') ?>">
             </figure>
         <?php endforeach; ?>
         <?php if (count($homeHeroSlides) > 1): ?>
@@ -14,10 +14,9 @@
         <?php endif; ?>
     </div>
     <div class="hero-copy hero-copy-<?= e($homeHeroTheme) ?>">
-        <span class="tag">Home dinamica</span>
-        <h2>La cucina di Nonna Celeste</h2>
-        <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
-        <p class="helper-text">Lo slider mostra automaticamente le foto caricate dall'admin con dissolvenza morbida.</p>
+        <span class="tag">Home</span>
+        <h2 class="page-title home-title">NONNA CELESTE</h2>
+        <p>Le ricette di famiglia, la memoria della tradizione e le varianti moderne raccolte in un unico archivio.</p>
         <div class="grid-buttons">
             <a class="card-button" href="/?action=traditional">Ricetta tradizionale</a>
             <a class="card-button" href="/?action=family">Ricette familiari</a>

@@ -5,12 +5,32 @@ $action = query('action', 'home');
 $user = current_user();
 $flash = consume_flash();
 
+if ($action !== 'media') {
+    register_active_session($user);
+}
+
+if ($action === 'media') {
+    $mediaPath = media_storage_path((string) query('path', ''));
+    if ($mediaPath === null) {
+        http_response_code(404);
+        exit('File non trovato.');
+    }
+
+    $mimeType = mime_content_type($mediaPath) ?: 'application/octet-stream';
+    header('Content-Type: ' . $mimeType);
+    header('Content-Length: ' . (string) filesize($mediaPath));
+    header('Cache-Control: public, max-age=86400');
+    readfile($mediaPath);
+    exit;
+}
+
 if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt = $db->prepare('SELECT * FROM users WHERE email = ?');
     $stmt->execute([post('email')]);
     $candidate = $stmt->fetch();
     if ($candidate && password_verify((string) post('password'), $candidate['password'])) {
         $_SESSION['user_id'] = $candidate['id'];
+        register_active_session($candidate);
         flash('success', 'Accesso effettuato con successo.');
     } else {
         flash('error', 'Credenziali non valide.');
@@ -19,6 +39,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 if ($action === 'logout') {
+    unregister_active_session();
     session_destroy();
     header('Location: /');
     exit;
@@ -256,5 +277,8 @@ $galleryRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook
 $homeHeroSlides = home_hero_slides();
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
+$pageViews = increment_page_views();
+$activeUsersCount = active_logged_in_users_count();
+$totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();
 
 include __DIR__ . '/views/layout.php';
