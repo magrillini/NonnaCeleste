@@ -67,6 +67,58 @@ function consume_flash(): ?array
     return $flash;
 }
 
+function current_request_path(): string
+{
+    $requestUri = (string) ($_SERVER['REQUEST_URI'] ?? '/');
+    $path = parse_url($requestUri, PHP_URL_PATH);
+
+    return is_string($path) && $path !== '' ? $path : '/';
+}
+
+function register_active_session(?array $user): void
+{
+    global $db;
+
+    $sessionId = session_id();
+    if ($sessionId === '') {
+        return;
+    }
+
+    $db->prepare('DELETE FROM active_sessions WHERE last_seen < ?')
+        ->execute([time() - 900]);
+
+    $db->prepare('INSERT INTO active_sessions(session_id,user_id,current_path,last_seen) VALUES(?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET user_id = excluded.user_id, current_path = excluded.current_path, last_seen = excluded.last_seen')
+        ->execute([$sessionId, $user['id'] ?? null, current_request_path(), time()]);
+}
+
+function unregister_active_session(): void
+{
+    global $db;
+
+    $sessionId = session_id();
+    if ($sessionId === '') {
+        return;
+    }
+
+    $db->prepare('DELETE FROM active_sessions WHERE session_id = ?')->execute([$sessionId]);
+}
+
+function increment_page_views(): int
+{
+    $current = (int) (site_setting('page_views', '0') ?? '0');
+    $updated = $current + 1;
+    set_site_setting('page_views', (string) $updated);
+
+    return $updated;
+}
+
+function active_logged_in_users_count(): int
+{
+    global $db;
+
+    return (int) $db->query('SELECT COUNT(DISTINCT user_id) FROM active_sessions WHERE user_id IS NOT NULL AND last_seen >= ' . (time() - 900))->fetchColumn();
+}
+
 function media_url(?string $path): string
 {
     $trimmedPath = trim((string) $path);
