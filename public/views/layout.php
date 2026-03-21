@@ -46,11 +46,26 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <?php endif; ?>
 
     <?php if ($action === 'home'): ?>
-        <section class="hero">
-            <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=80" alt="Nonna Celeste in cucina">
-            <div>
+        <section class="hero hero-theme-<?= e($homeHeroTheme) ?>">
+            <div class="hero-media" data-hero-slider>
+                <?php foreach ($homeHeroSlides as $index => $slide): ?>
+                    <figure class="hero-slide <?= $index === 0 ? 'is-active' : '' ?>" data-hero-slide>
+                        <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home Nonna Celeste') ?>">
+                    </figure>
+                <?php endforeach; ?>
+                <?php if (count($homeHeroSlides) > 1): ?>
+                    <div class="hero-dots" aria-label="Selettore foto Home">
+                        <?php foreach ($homeHeroSlides as $index => $slide): ?>
+                            <button type="button" class="hero-dot <?= $index === 0 ? 'is-active' : '' ?>" data-hero-dot="<?= (int) $index ?>" aria-label="Vai alla foto <?= (int) $index + 1 ?>"></button>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+            <div class="hero-copy hero-copy-<?= e($homeHeroTheme) ?>">
+                <span class="tag">Home dinamica</span>
                 <h2>La cucina di Nonna Celeste</h2>
                 <p>Una casa digitale per custodire ricette tradizionali, ricette familiari, varianti regionali e i racconti di chi le cucina.</p>
+                <p class="helper-text">Lo slider mostra automaticamente le foto caricate dall'admin con dissolvenza morbida.</p>
                 <div class="grid-buttons">
                     <a class="card-button" href="/?action=traditional">Ricetta tradizionale</a>
                     <a class="card-button" href="/?action=family">Ricette familiari</a>
@@ -320,6 +335,49 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section>
             <h2>Pannello amministrazione</h2>
             <div class="admin-grid">
+                <form method="post" action="/?action=admin_save_home_media" enctype="multipart/form-data" class="stack-form">
+                    <h3>Slider e grafica Home</h3>
+                    <p class="helper-text">Carica una o più foto insieme e scegli la grafica della Home. Le immagini scorrono automaticamente con dissolvenza.</p>
+                    <label>Grafica Home
+                        <select name="home_theme">
+                            <?php foreach ($homeThemeOptions as $themeKey => $themeLabel): ?>
+                                <option value="<?= e($themeKey) ?>" <?= $homeHeroTheme === $themeKey ? 'selected' : '' ?>><?= e($themeLabel) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </label>
+                    <label>Nuove foto Home
+                        <input type="file" name="home_slides[]" accept="image/jpeg,image/png,image/webp,image/gif" multiple>
+                    </label>
+                    <p class="helper-text">Puoi selezionare più file nello stesso caricamento. Se non scegli nuovi file, viene salvata solo la grafica.</p>
+                    <button type="submit">Carica e pubblica</button>
+                </form>
+                <form method="post" action="/?action=admin_reset_home_hero" class="stack-form">
+                    <h3>Ripristina slider predefinito</h3>
+                    <p class="helper-text">Elimina tutte le foto caricate e torna all'immagine standard della Home.</p>
+                    <button type="submit" class="secondary-button">Ripristina foto default</button>
+                </form>
+            </div>
+            <div class="stack-form">
+                <h3>Foto attuali della Home</h3>
+                <p class="helper-text">Queste immagini vengono usate nello slider automatico della Home. Puoi cancellarle singolarmente.</p>
+                <div class="home-slide-admin-grid">
+                    <?php foreach ($homeHeroSlides as $slide): ?>
+                        <article class="recipe-card home-slide-admin-card">
+                            <img src="<?= e($slide['path']) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
+                            <p><strong><?= e($slide['caption'] ?: 'Foto Home') ?></strong></p>
+                            <?php if (!empty($slide['id'])): ?>
+                                <form method="post" action="/?action=admin_delete_home_slide" class="stack-form small-form">
+                                    <input type="hidden" name="slide_id" value="<?= (int) $slide['id'] ?>">
+                                    <button type="submit" class="secondary-button">Elimina foto</button>
+                                </form>
+                            <?php else: ?>
+                                <p class="helper-text">Immagine predefinita di fallback.</p>
+                            <?php endif; ?>
+                        </article>
+                    <?php endforeach; ?>
+                </div>
+            </div>
+            <div class="admin-grid">
                 <form method="post" action="/?action=admin_add_catalog" class="stack-form">
                     <input type="hidden" name="catalog_type" value="ingredient">
                     <h3>Aggiungi ingrediente mancante</h3>
@@ -390,6 +448,29 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 </main>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    const heroSlider = document.querySelector('[data-hero-slider]');
+    if (heroSlider) {
+        const slides = Array.from(heroSlider.querySelectorAll('[data-hero-slide]'));
+        const dots = Array.from(heroSlider.querySelectorAll('[data-hero-dot]'));
+        let activeIndex = 0;
+
+        const showSlide = (index) => {
+            slides.forEach((slide, slideIndex) => slide.classList.toggle('is-active', slideIndex === index));
+            dots.forEach((dot, dotIndex) => dot.classList.toggle('is-active', dotIndex === index));
+            activeIndex = index;
+        };
+
+        dots.forEach((dot, index) => {
+            dot.addEventListener('click', () => showSlide(index));
+        });
+
+        if (slides.length > 1) {
+            window.setInterval(() => {
+                showSlide((activeIndex + 1) % slides.length);
+            }, 4000);
+        }
+    }
+
     const ingredientFieldset = document.querySelector('.dynamic-ingredients');
     if (ingredientFieldset) {
         const list = ingredientFieldset.querySelector('.ingredient-list');

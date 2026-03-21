@@ -18,7 +18,7 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
   - galleria immagini;
   - stampa PDF via foglio di stampa del browser.
 - Commenti pubblici modificabili solo dal proprietario.
-- Area admin per inserimento ingredienti, utensili mancanti e anagrafica cuochi approvati.
+- Area admin per inserimento ingredienti, utensili mancanti, anagrafica cuochi approvati, slider fotografico della Home e scelta grafica della testata.
 - Pagina contatti/richieste con richieste di cancellazione ricetta e richiesta inserimento nuovo cuoco.
 - Link rapido per aggiungere una ricetta/festività a Google Calendar.
 
@@ -37,4 +37,4 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
 
 ## Note
 - In questa fase l'integrazione Google Calendar è implementata come link di creazione evento precompilato. Una futura iterazione può sostituirla con OAuth/API complete.
-- L'upload immagini salva i file in `storage/`.
+- L'upload immagini salva i file in `storage/`. Lo slider della Home può essere aggiornato dal pannello admin con più foto e grafica selezionabile; i file vengono salvati in `storage/home/`.

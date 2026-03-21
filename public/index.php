@@ -182,6 +182,35 @@ if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_
     redirect('/?action=admin');
 }
 
+if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    try {
+        $savedSlides = save_home_slides($_FILES['home_slides'] ?? [], (int) $user['id']);
+        set_home_theme((string) post('home_theme', 'classic'));
+
+        if ($savedSlides > 0) {
+            flash('success', sprintf('Home aggiornata: %d foto caricate e grafica salvata.', $savedSlides));
+        } else {
+            flash('success', 'Grafica Home aggiornata correttamente.');
+        }
+    } catch (Throwable $e) {
+        flash('error', 'Errore aggiornamento Home: ' . $e->getMessage());
+    }
+
+    redirect('/?action=admin');
+}
+
+if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    delete_home_slide((int) post('slide_id', 0));
+    flash('success', 'Foto Home eliminata.');
+    redirect('/?action=admin');
+}
+
+if ($action === 'admin_reset_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    reset_home_slides();
+    flash('success', 'Slider Home ripristinato alle immagini predefinite.');
+    redirect('/?action=admin');
+}
+
 $ingredients = fetch_all($db, 'SELECT * FROM ingredients ORDER BY name');
 $utensils = fetch_all($db, 'SELECT * FROM utensils ORDER BY name');
 $cookingMethods = fetch_all($db, 'SELECT * FROM cooking_methods ORDER BY name');
@@ -224,5 +253,8 @@ if ($action === 'recipe' && ($recipeId = (int) query('id'))) {
 }
 
 $galleryRecipes = fetch_all($db, 'SELECT recipes.id, recipes.title, recipes.cook_name, MIN(recipe_images.path) AS image_path FROM recipes LEFT JOIN recipe_images ON recipe_images.recipe_id = recipes.id GROUP BY recipes.id ORDER BY recipes.created_at DESC');
+$homeHeroSlides = home_hero_slides();
+$homeHeroTheme = home_theme();
+$homeThemeOptions = home_theme_options();
 
 include __DIR__ . '/views/layout.php';

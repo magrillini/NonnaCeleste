@@ -149,6 +149,22 @@ CREATE TABLE IF NOT EXISTS comments (
     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
     FOREIGN KEY(user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS site_settings (
+    key_name TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS home_slides (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    path TEXT NOT NULL,
+    caption TEXT,
+    sort_order INTEGER NOT NULL DEFAULT 0,
+    uploaded_by_user_id INTEGER,
+    created_at TEXT NOT NULL,
+    FOREIGN KEY(uploaded_by_user_id) REFERENCES users(id)
+);
 SQL);
 
         self::ensureColumn($db, 'recipes', 'cook_id', 'INTEGER REFERENCES cooks(id)');
