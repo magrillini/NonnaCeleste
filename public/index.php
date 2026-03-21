@@ -5,10 +5,6 @@ $action = query('action', 'home');
 $user = current_user();
 $flash = consume_flash();
 
-if ($action !== 'media') {
-    register_active_session($user);
-}
-
 if ($action === 'media') {
     $mediaPath = media_storage_path((string) query('path', ''));
     if ($mediaPath === null) {
