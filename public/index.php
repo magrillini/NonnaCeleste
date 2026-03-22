@@ -7,6 +7,9 @@ if ($action === 'gallery') {
 }
 
 $user = current_user();
+if ($user) {
+    register_active_session($user);
+}
 $flash = consume_flash();
 
 if (!$user && !in_array($action, ['login', 'media'], true)) {
@@ -374,7 +377,7 @@ usort($photoGallery, static fn (array $a, array $b): int => strcmp((string) ($b[
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
 $loginCoverImage = login_cover_image_path();
-$pageViews = increment_page_views();
+$pageViews = $_SERVER['REQUEST_METHOD'] === 'GET' ? increment_page_views() : (int) (site_setting('page_views', '0') ?? '0');
 $activeUsersCount = active_logged_in_users_count();
 $totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();
 
