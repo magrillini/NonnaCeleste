@@ -467,10 +467,10 @@ $unitLabels = [
             <div class="stack-form">
                 <h3>Foto attuali della Home</h3>
                 <p class="helper-text">Queste immagini vengono usate nello slider automatico della Home. Puoi cancellarle singolarmente.</p>
-                <div class="home-slide-admin-grid">
+                <div class="home-slide-admin-grid media-library-grid">
                     <?php foreach ($homeHeroSlides as $slide): ?>
                         <article class="recipe-card home-slide-admin-card">
-                            <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
+                            <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview library-preview">
                             <p><strong><?= e($slide['caption'] ?: 'Foto Home') ?></strong></p>
                             <?php if (!empty($slide['id'])): ?>
                                 <form method="post" action="<?= e(route_url('admin_delete_home_slide')) ?>" class="stack-form small-form">
@@ -501,12 +501,12 @@ $unitLabels = [
             </div>
             <div class="stack-form">
                 <h3>Sfondi disponibili per la login</h3>
-                <p class="helper-text">Anteprima ridotta 100 × 56 px: la cornice resta ampia ma l'immagine viene mostrata più piccola e contenuta.</p>
-                <div class="home-slide-admin-grid login-cover-library">
+                <p class="helper-text">Anteprime ridotte come in Photo Gallery: miniature più compatte e meglio contenute dentro ogni card.</p>
+                <div class="home-slide-admin-grid media-library-grid login-cover-library">
                     <?php if ($loginCoverImages): ?>
                         <?php foreach ($loginCoverImages as $coverImage): ?>
                             <article class="recipe-card home-slide-admin-card">
-                                <img src="<?= e(media_url($coverImage['path'])) ?>" alt="<?= e($coverImage['name']) ?>" class="admin-preview login-cover-preview">
+                                <img src="<?= e(media_url($coverImage['path'])) ?>" alt="<?= e($coverImage['name']) ?>" class="admin-preview library-preview">
                                 <p><strong><?= e($coverImage['name']) ?></strong></p>
                                 <?php if ($loginCoverImage === $coverImage['path']): ?>
                                     <p class="helper-text">Sfondo attualmente attivo.</p>
