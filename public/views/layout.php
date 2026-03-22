@@ -1,7 +1,29 @@
 <?php
 $holidays = ['Natale','Capodanno','Epifania','Carnevale','Pasqua','Pasquetta','Ferragosto','Ognissanti','Immacolata','Festa patronale'];
-$mealTimes = ['colazione','pranzo','merenda','cena'];
-$courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
+$mealTimes = [
+    'nessuna' => 'Nessuna',
+    'buona sempre' => 'Buona Sempre',
+    'colazione' => 'Colazione',
+    'pranzo' => 'Pranzo',
+    'merenda' => 'Merenda',
+    'cena' => 'Cena',
+    'pic nic' => 'Pic Nic',
+];
+$courseTypes = [
+    'aperitivo' => 'Aperitivo',
+    'antipasto' => 'Antipasto',
+    'primo' => 'Primo',
+    'secondo' => 'Secondo',
+    'contorno' => 'Contorno',
+    'dolce' => 'Dolce',
+];
+$temperatureOptions = range(60, 200, 10);
+$unitLabels = [
+    'gr' => 'gr',
+    'cl' => 'cl',
+    'n' => 'N. Numero',
+    'qb' => 'qb',
+];
 ?>
 <!doctype html>
 <html lang="it">
@@ -90,7 +112,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     </select>
                     <select name="meal_time">
                         <option value="">Tutti i momenti</option>
-                        <?php foreach ($mealTimes as $meal): ?><option value="<?= e($meal) ?>" <?= query('meal_time') === $meal ? 'selected' : '' ?>><?= e(ucfirst($meal)) ?></option><?php endforeach; ?>
+                        <?php foreach ($mealTimes as $mealValue => $mealLabel): ?><option value="<?= e($mealValue) ?>" <?= query('meal_time') === $mealValue ? 'selected' : '' ?>><?= e($mealLabel) ?></option><?php endforeach; ?>
                     </select>
                     <button type="submit">Filtra</button>
                 </form>
@@ -102,7 +124,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <h3><a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>"><?= e($item['title']) ?></a></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
-                        <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
+                        <p><strong>Momento:</strong> <?= e($mealTimes[$item['meal_time']] ?? $item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($courseTypes[$item['course_type']] ?? $item['course_type']) : '' ?></p>
                         <p><strong>Autore inserimento:</strong> <?= e($item['author_name']) ?></p>
                     </article>
                 <?php endforeach; ?>
@@ -137,13 +159,13 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 </label>
                 <label>Momento della giornata
                     <select name="meal_time" required>
-                        <?php foreach ($mealTimes as $meal): ?><option value="<?= e($meal) ?>"><?= e(ucfirst($meal)) ?></option><?php endforeach; ?>
+                        <?php foreach ($mealTimes as $mealValue => $mealLabel): ?><option value="<?= e($mealValue) ?>"><?= e($mealLabel) ?></option><?php endforeach; ?>
                     </select>
                 </label>
                 <label>Portata pranzo/cena
                     <select name="course_type">
                         <option value="">Non applicabile</option>
-                        <?php foreach ($courseTypes as $course): ?><option value="<?= e($course) ?>"><?= e(ucfirst($course)) ?></option><?php endforeach; ?>
+                        <?php foreach ($courseTypes as $courseValue => $courseLabel): ?><option value="<?= e($courseValue) ?>"><?= e($courseLabel) ?></option><?php endforeach; ?>
                     </select>
                 </label>
 
@@ -162,6 +184,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <select name="ingredient_units[]">
                                 <option value="gr">gr</option>
                                 <option value="cl">cl</option>
+                                <option value="n">N. Numero</option>
                                 <option value="qb">qb</option>
                             </select>
                         </div>
@@ -180,6 +203,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <select name="ingredient_units[]">
                                 <option value="gr">gr</option>
                                 <option value="cl">cl</option>
+                                <option value="n">N. Numero</option>
                                 <option value="qb">qb</option>
                             </select>
                         </div>
@@ -211,12 +235,16 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <fieldset>
                     <legend>Modalità di cottura</legend>
                     <?php for ($i = 0; $i < 3; $i++): ?>
-                        <div class="inline-grid">
+                        <div class="inline-grid cooking-grid">
                             <select name="cooking_methods[]">
                                 <option value="">Modalità</option>
                                 <?php foreach ($cookingMethods as $method): ?><option value="<?= (int) $method['id'] ?>"><?= e($method['name']) ?></option><?php endforeach; ?>
                             </select>
                             <input type="number" min="0" name="cooking_minutes[]" placeholder="Minuti">
+                            <select name="cooking_temperatures[]">
+                                <option value="">Temperatura</option>
+                                <?php foreach ($temperatureOptions as $temperature): ?><option value="<?= $temperature ?>"><?= $temperature ?> °C</option><?php endforeach; ?>
+                            </select>
                         </div>
                     <?php endfor; ?>
                 </fieldset>
@@ -224,8 +252,12 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <label>Modalità di esecuzione descrittiva
                     <textarea name="execution_method" rows="7" required></textarea>
                 </label>
-                <label>Galleria foto
-                    <input type="file" name="gallery[]" multiple accept="image/*">
+                <label>Nome della foto
+                    <input type="text" name="gallery_caption" placeholder="Es. Lasagna appena sfornata">
+                </label>
+                <label>Foto della ricetta
+                    <input type="file" name="gallery_photo" accept="image/*">
+                    <small class="helper-text">Carica una foto per volta: se vuoi aggiungerne altre, ripeti l'inserimento con una nuova ricetta o un prossimo aggiornamento.</small>
                 </label>
                 <button type="submit">Salva ricetta</button>
             </form>
@@ -240,13 +272,13 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <p><strong>Cuoco:</strong> <?= e($recipe['cook_name']) ?></p>
             <p><strong>Tipologia:</strong> <?= e($recipe['visibility_type']) ?></p>
             <p><strong>Festività:</strong> <?= e($recipe['holiday'] ?: 'Nessuna') ?></p>
-            <p><strong>Momento della giornata:</strong> <?= e($recipe['meal_time']) ?><?= $recipe['course_type'] ? ' / ' . e($recipe['course_type']) : '' ?></p>
+            <p><strong>Momento della giornata:</strong> <?= e($mealTimes[$recipe['meal_time']] ?? $recipe['meal_time']) ?><?= $recipe['course_type'] ? ' / ' . e($courseTypes[$recipe['course_type']] ?? $recipe['course_type']) : '' ?></p>
             <p><strong>Inserita da:</strong> <?= e($recipe['author_name']) ?></p>
 
             <h3>Ingredienti</h3>
             <ul>
                 <?php foreach ($recipeIngredients as $item): ?>
-                    <li><?= e($item['name']) ?> - <?= $item['quantity_unit'] === 'qb' ? 'qb' : e((string) $item['quantity_value'] . ' ' . $item['quantity_unit']) ?></li>
+                    <li><?= e($item['name']) ?> - <?= $item['quantity_unit'] === 'qb' ? 'qb' : e((string) $item['quantity_value']) . ' ' . e($unitLabels[$item['quantity_unit']] ?? $item['quantity_unit']) ?></li>
                 <?php endforeach; ?>
             </ul>
 
@@ -257,7 +289,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
             <h3>Cottura</h3>
             <ul>
-                <?php foreach ($recipeMethods as $item): ?><li><?= e($item['name']) ?> - <?= (int) $item['minutes'] ?> minuti</li><?php endforeach; ?>
+                <?php foreach ($recipeMethods as $item): ?><li><?= e($item['name']) ?> - <?= (int) $item['minutes'] ?> minuti<?= !empty($item['temperature']) ? ' / ' . e((string) $item['temperature']) . ' °C' : '' ?></li><?php endforeach; ?>
             </ul>
 
             <h3>Esecuzione</h3>
@@ -303,7 +335,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <h3><?= e($item['title']) ?></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
-                        <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
+                        <p><strong>Momento:</strong> <?= e($mealTimes[$item['meal_time']] ?? $item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($courseTypes[$item['course_type']] ?? $item['course_type']) : '' ?></p>
                         <a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>">Apri la ricetta</a>
                     </article>
                 <?php endforeach; ?>
@@ -316,7 +348,17 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <div class="photo-gallery-grid">
                 <?php foreach ($photoGallery as $photo): ?>
                     <article class="photo-card">
-                        <img src="<?= e(media_url($photo['path'])) ?>" alt="<?= e($photo['caption'] ?: $photo['title']) ?>">
+                        <button
+                            type="button"
+                            class="photo-thumb-button"
+                            data-gallery-open
+                            data-photo-src="<?= e(media_url($photo['path'])) ?>"
+                            data-photo-title="<?= e($photo['caption'] ?: $photo['title']) ?>"
+                            data-photo-origin="<?= e($photo['title']) ?>"
+                            data-photo-reference="<?= e($photo['cook_name']) ?>"
+                        >
+                            <img src="<?= e(media_url($photo['path'])) ?>" alt="<?= e($photo['caption'] ?: $photo['title']) ?>">
+                        </button>
                         <div class="photo-card-copy">
                             <span class="tag"><?= $photo['source_type'] === 'home' ? 'home' : 'ricetta' ?></span>
                             <h3><?= e($photo['caption'] ?: $photo['title']) ?></h3>
@@ -327,6 +369,23 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     </article>
                 <?php endforeach; ?>
             </div>
+            <?php if ($photoGallery): ?>
+                <dialog class="photo-lightbox" data-photo-lightbox>
+                    <div class="photo-lightbox-shell">
+                        <button type="button" class="photo-lightbox-close" data-lightbox-close aria-label="Chiudi">×</button>
+                        <button type="button" class="photo-lightbox-nav" data-lightbox-prev aria-label="Foto precedente">‹</button>
+                        <figure class="photo-lightbox-figure">
+                            <img src="" alt="" data-lightbox-image>
+                            <figcaption class="photo-lightbox-copy">
+                                <strong data-lightbox-title></strong>
+                                <span data-lightbox-origin></span>
+                                <span data-lightbox-reference></span>
+                            </figcaption>
+                        </figure>
+                        <button type="button" class="photo-lightbox-nav" data-lightbox-next aria-label="Foto successiva">›</button>
+                    </div>
+                </dialog>
+            <?php endif; ?>
         </section>
     <?php elseif ($action === 'profile' && $user): ?>
         <section>
@@ -596,6 +655,56 @@ document.addEventListener('DOMContentLoaded', function () {
 
         options.forEach(option => option.querySelector('input').addEventListener('change', renderSelected));
         renderSelected();
+    }
+
+    const photoButtons = Array.from(document.querySelectorAll('[data-gallery-open]'));
+    const lightbox = document.querySelector('[data-photo-lightbox]');
+    if (lightbox && photoButtons.length > 0) {
+        const image = lightbox.querySelector('[data-lightbox-image]');
+        const title = lightbox.querySelector('[data-lightbox-title]');
+        const origin = lightbox.querySelector('[data-lightbox-origin]');
+        const reference = lightbox.querySelector('[data-lightbox-reference]');
+        let activeIndex = 0;
+
+        const renderPhoto = (index) => {
+            const button = photoButtons[index];
+            activeIndex = index;
+            image.src = button.dataset.photoSrc || '';
+            image.alt = button.dataset.photoTitle || 'Foto galleria';
+            title.textContent = button.dataset.photoTitle || 'Foto galleria';
+            origin.textContent = button.dataset.photoOrigin ? `Origine: ${button.dataset.photoOrigin}` : '';
+            reference.textContent = button.dataset.photoReference ? `Riferimento: ${button.dataset.photoReference}` : '';
+        };
+
+        photoButtons.forEach((button, index) => {
+            button.addEventListener('click', () => {
+                renderPhoto(index);
+                lightbox.showModal();
+            });
+        });
+
+        lightbox.querySelector('[data-lightbox-close]').addEventListener('click', () => lightbox.close());
+        lightbox.querySelector('[data-lightbox-prev]').addEventListener('click', () => renderPhoto((activeIndex - 1 + photoButtons.length) % photoButtons.length));
+        lightbox.querySelector('[data-lightbox-next]').addEventListener('click', () => renderPhoto((activeIndex + 1) % photoButtons.length));
+        lightbox.addEventListener('click', (event) => {
+            if (event.target === lightbox) {
+                lightbox.close();
+            }
+        });
+        document.addEventListener('keydown', (event) => {
+            if (!lightbox.open) {
+                return;
+            }
+            if (event.key === 'Escape') {
+                lightbox.close();
+            }
+            if (event.key === 'ArrowLeft') {
+                renderPhoto((activeIndex - 1 + photoButtons.length) % photoButtons.length);
+            }
+            if (event.key === 'ArrowRight') {
+                renderPhoto((activeIndex + 1) % photoButtons.length);
+            }
+        });
     }
 });
 </script>
