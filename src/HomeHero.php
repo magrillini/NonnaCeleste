@@ -100,6 +100,33 @@ function store_home_image(array $file, int $userId): ?string
 }
 
 
+function store_login_cover_image(array $file, int $userId): ?string
+{
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
+        return null;
+    }
+
+    $mimeType = mime_content_type($file['tmp_name']) ?: ($file['type'] ?? '');
+    $allowed = uploaded_image_definitions();
+    if (!isset($allowed[$mimeType])) {
+        throw new RuntimeException('Formato immagine non supportato. Usa JPG, PNG, WEBP o GIF.');
+    }
+
+    $targetDir = STORAGE_PATH . '/login-backgrounds';
+    if (!is_dir($targetDir)) {
+        mkdir($targetDir, 0777, true);
+    }
+
+    $name = sprintf('login_cover_%d_%s.%s', $userId, uniqid('', true), $allowed[$mimeType]);
+    $destination = $targetDir . '/' . $name;
+    if (!move_uploaded_file_safely($file['tmp_name'], $destination)) {
+        throw new RuntimeException('Upload immagine login non riuscito. Verifica i permessi della cartella storage/login-backgrounds.');
+    }
+
+    return 'storage/login-backgrounds/' . $name;
+}
+
+
 function login_cover_image_path(): ?string
 {
     $path = site_setting('login_cover_image');
@@ -108,17 +135,9 @@ function login_cover_image_path(): ?string
 
 function save_login_cover_image(array $file, int $userId): bool
 {
-    $path = store_home_image($file, $userId);
+    $path = store_login_cover_image($file, $userId);
     if ($path === null) {
         return false;
-    }
-
-    $currentPath = login_cover_image_path();
-    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
-        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
-        if (is_file($absoluteCurrentPath)) {
-            unlink($absoluteCurrentPath);
-        }
     }
 
     set_site_setting('login_cover_image', $path);
@@ -126,16 +145,39 @@ function save_login_cover_image(array $file, int $userId): bool
     return true;
 }
 
-function reset_login_cover_image(): void
+function set_login_cover_image(string $path): bool
 {
-    $currentPath = login_cover_image_path();
-    if ($currentPath && str_starts_with($currentPath, 'storage/home/')) {
-        $absoluteCurrentPath = BASE_PATH . '/' . $currentPath;
-        if (is_file($absoluteCurrentPath)) {
-            unlink($absoluteCurrentPath);
-        }
+    $absolutePath = BASE_PATH . '/' . ltrim($path, '/');
+    $storageRoot = realpath(STORAGE_PATH . '/login-backgrounds');
+    $realPath = realpath($absolutePath);
+    if ($storageRoot === false || $realPath === false || !str_starts_with($realPath, $storageRoot . DIRECTORY_SEPARATOR)) {
+        return false;
     }
 
+    set_site_setting('login_cover_image', $path);
+    return true;
+}
+
+function available_login_cover_images(): array
+{
+    $dir = STORAGE_PATH . '/login-backgrounds';
+    if (!is_dir($dir)) {
+        return [];
+    }
+
+    $files = glob($dir . '/*.{jpg,jpeg,png,webp,gif}', GLOB_BRACE) ?: [];
+    usort($files, static fn (string $a, string $b): int => filemtime($b) <=> filemtime($a));
+
+    return array_map(static function (string $filePath): array {
+        return [
+            'path' => 'storage/login-backgrounds/' . basename($filePath),
+            'name' => pathinfo($filePath, PATHINFO_FILENAME),
+        ];
+    }, $files);
+}
+
+function reset_login_cover_image(): void
+{
     delete_site_setting('login_cover_image');
 }
 

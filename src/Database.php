@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS recipe_ingredients (
     recipe_id INTEGER NOT NULL,
     ingredient_id INTEGER NOT NULL,
     quantity_value REAL,
-    quantity_unit TEXT NOT NULL CHECK(quantity_unit IN ('gr','cl','qb')),
+    quantity_unit TEXT NOT NULL CHECK(quantity_unit IN ('gr','cl','qb','n')),
     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
     FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
 );
@@ -124,6 +124,7 @@ CREATE TABLE IF NOT EXISTS recipe_cooking_methods (
     recipe_id INTEGER NOT NULL,
     cooking_method_id INTEGER NOT NULL,
     minutes INTEGER NOT NULL,
+    temperature INTEGER,
     FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
     FOREIGN KEY(cooking_method_id) REFERENCES cooking_methods(id)
 );
@@ -185,6 +186,32 @@ SQL);
         self::ensureColumn($db, 'contact_requests', 'cook_email', 'TEXT');
         self::ensureColumn($db, 'contact_requests', 'cook_parent_names', 'TEXT');
         self::ensureColumn($db, 'contact_requests', 'status', "TEXT NOT NULL DEFAULT 'nuova'");
+        self::ensureColumn($db, 'recipe_cooking_methods', 'temperature', 'INTEGER');
+        self::ensureRecipeIngredientUnits($db);
+    }
+
+    private static function ensureRecipeIngredientUnits(PDO $db): void
+    {
+        $tableSql = $db->query("SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'recipe_ingredients'")->fetchColumn();
+        if (!is_string($tableSql) || str_contains($tableSql, "'n'")) {
+            return;
+        }
+
+        $db->exec(<<<'SQL'
+CREATE TABLE IF NOT EXISTS recipe_ingredients_new (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recipe_id INTEGER NOT NULL,
+    ingredient_id INTEGER NOT NULL,
+    quantity_value REAL,
+    quantity_unit TEXT NOT NULL CHECK(quantity_unit IN ('gr','cl','qb','n')),
+    FOREIGN KEY(recipe_id) REFERENCES recipes(id) ON DELETE CASCADE,
+    FOREIGN KEY(ingredient_id) REFERENCES ingredients(id)
+);
+INSERT INTO recipe_ingredients_new(id, recipe_id, ingredient_id, quantity_value, quantity_unit)
+SELECT id, recipe_id, ingredient_id, quantity_value, quantity_unit FROM recipe_ingredients;
+DROP TABLE recipe_ingredients;
+ALTER TABLE recipe_ingredients_new RENAME TO recipe_ingredients;
+SQL);
     }
 
     private static function ensureColumn(PDO $db, string $table, string $column, string $definition): void
@@ -262,7 +289,7 @@ SQL);
             ('Pastiera di famiglia','Maria Rossi',2,3,'familiare','Pasqua','merenda','dolce','Impastare la frolla, preparare il ripieno con ricotta e grano, cuocere e far riposare 24 ore.',0,1,'" . date(DATE_ATOM) . "','" . date(DATE_ATOM) . "')");
             $db->exec("INSERT INTO recipe_ingredients(recipe_id,ingredient_id,quantity_value,quantity_unit) VALUES (1,48,500,'gr'),(1,118,300,'gr'),(1,126,100,'gr'),(2,116,400,'gr'),(2,38,250,'gr'),(2,125,3,'qb')");
             $db->exec("INSERT INTO recipe_utensils(recipe_id,utensil_id) VALUES (1,1),(1,4),(2,5),(2,19)");
-            $db->exec("INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes) VALUES (1,2,35),(2,2,60)");
+            $db->exec("INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes,temperature) VALUES (1,2,35,180),(2,2,60,170)");
             $db->exec("INSERT INTO comments(recipe_id,user_id,body,created_at,updated_at) VALUES (1,3,'Ricetta perfetta per il pranzo della domenica.', '" . date(DATE_ATOM) . "', '" . date(DATE_ATOM) . "')");
         }
     }
