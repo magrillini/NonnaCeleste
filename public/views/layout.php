@@ -9,7 +9,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Nonna Celeste</title>
-    <link rel="stylesheet" href="/style.css">
+    <link rel="stylesheet" href="<?= e(asset_url('style.css')) ?>">
 </head>
 <body>
 <?php if ($action === 'landing'): ?>
@@ -18,8 +18,11 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <div class="landing-card">
                 <p class="landing-kicker">Benvenuti</p>
                 <h1 class="landing-title">WWW.NONNACELESTE.IT</h1>
-                <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste. L'immagine di sfondo può essere gestita soltanto da Admin e Super Admin.</p>
-                <form method="post" action="/?action=login" class="stack-form landing-form">
+                <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste.</p>
+                <?php if ($flash): ?>
+                    <div class="flash <?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+                <?php endif; ?>
+                <form method="post" action="<?= e(route_url('login')) ?>" class="stack-form landing-form">
                     <label>Email <input type="email" name="email" placeholder="email" required></label>
                     <label>Password <input type="password" name="password" placeholder="password" required></label>
                     <button type="submit">Entra nel sito</button>
@@ -43,9 +46,9 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <span class="role"><?= e($user['role']) ?></span>
                     </div>
                     <div class="user-links">
-                        <a href="/?action=profile">Area dati personali</a>
-                        <a href="/?action=profile#password-box">Cambio password</a>
-                        <a href="/?action=logout">Esci</a>
+                        <a href="<?= e(route_url('profile')) ?>">Area dati personali</a>
+                        <a href="<?= e(route_url('profile', [], 'password-box')) ?>">Cambio password</a>
+                        <a href="<?= e(route_url('logout')) ?>">Esci</a>
                     </div>
                 </div>
             <?php endif; ?>
@@ -57,14 +60,14 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <span><strong>Ricette inserite:</strong> <?= (int) $totalRecipes ?></span>
     </div>
     <nav>
-        <a href="/?action=home">Home</a>
-        <a href="/?action=book">Libro delle ricette</a>
-        <a href="/?action=traditional">Ricette tradizionali</a>
-        <a href="/?action=family">Ricette familiari</a>
-        <a href="/?action=photo_gallery">Photo Gallery</a>
-        <a href="/?action=submit">Inserisci ricetta</a>
-        <a href="/?action=contacts">Contatti</a>
-        <?php if (is_admin()): ?><a href="/?action=admin">Admin</a><?php endif; ?>
+        <a href="<?= e(route_url('home')) ?>">Home</a>
+        <a href="<?= e(route_url('book')) ?>">Libro delle ricette</a>
+        <a href="<?= e(route_url('traditional')) ?>">Ricette tradizionali</a>
+        <a href="<?= e(route_url('family')) ?>">Ricette familiari</a>
+        <a href="<?= e(route_url('photo_gallery')) ?>">Photo Gallery</a>
+        <a href="<?= e(route_url('submit')) ?>">Inserisci ricetta</a>
+        <a href="<?= e(route_url('contacts')) ?>">Contatti</a>
+        <?php if (is_admin()): ?><a href="<?= e(route_url('admin')) ?>">Admin</a><?php endif; ?>
     </nav>
 </header>
 
@@ -96,7 +99,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <?php foreach ($recipes as $item): ?>
                     <article class="recipe-card">
                         <span class="tag"><?= e($item['visibility_type']) ?></span>
-                        <h3><a href="/?action=recipe&id=<?= (int) $item['id'] ?>"><?= e($item['title']) ?></a></h3>
+                        <h3><a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>"><?= e($item['title']) ?></a></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
                         <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
@@ -109,7 +112,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section>
             <h2 class="page-title">Inserimento ricetta</h2>
             <p>Gli ingredienti si possono aggiungere uno alla volta, gli utensili restano visibili solo se selezionati e il cuoco deve essere scelto dall'elenco approvato dall'admin.</p>
-            <form method="post" action="/?action=save_recipe" enctype="multipart/form-data" class="stack-form">
+            <form method="post" action="<?= e(route_url('save_recipe')) ?>" enctype="multipart/form-data" class="stack-form">
                 <label>Nome ricetta <input type="text" name="title" required></label>
                 <label>Cuoco
                     <select name="cook_id" required>
@@ -271,7 +274,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     <strong><?= e($comment['name']) ?></strong>
                     <p><?= nl2br(e($comment['body'])) ?></p>
                     <?php if ($user && (int) $comment['user_id'] === (int) $user['id']): ?>
-                        <form method="post" action="/?action=save_comment" class="stack-form small-form">
+                        <form method="post" action="<?= e(route_url('save_comment')) ?>" class="stack-form small-form">
                             <input type="hidden" name="recipe_id" value="<?= (int) $recipe['id'] ?>">
                             <input type="hidden" name="comment_id" value="<?= (int) $comment['id'] ?>">
                             <textarea name="body" rows="3"><?= e($comment['body']) ?></textarea>
@@ -281,7 +284,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 </div>
             <?php endforeach; ?>
             <?php if ($user): ?>
-                <form method="post" action="/?action=save_comment" class="stack-form small-form">
+                <form method="post" action="<?= e(route_url('save_comment')) ?>" class="stack-form small-form">
                     <input type="hidden" name="recipe_id" value="<?= (int) $recipe['id'] ?>">
                     <textarea name="body" rows="4" placeholder="Lascia un commento visibile a tutti"></textarea>
                     <button type="submit">Pubblica commento</button>
@@ -301,7 +304,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
                         <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
-                        <a href="/?action=recipe&id=<?= (int) $item['id'] ?>">Apri la ricetta</a>
+                        <a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>">Apri la ricetta</a>
                     </article>
                 <?php endforeach; ?>
             </div>
@@ -319,7 +322,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <h3><?= e($photo['caption'] ?: $photo['title']) ?></h3>
                             <p><strong>Origine:</strong> <?= e($photo['title']) ?></p>
                             <p><strong>Riferimento:</strong> <?= e($photo['cook_name']) ?></p>
-                            <?php if (!empty($photo['recipe_id'])): ?><a href="/?action=recipe&id=<?= (int) $photo['recipe_id'] ?>">Vai alla ricetta</a><?php endif; ?>
+                            <?php if (!empty($photo['recipe_id'])): ?><a href="<?= e(route_url('recipe', ['id' => (int) $photo['recipe_id']])) ?>">Vai alla ricetta</a><?php endif; ?>
                         </div>
                     </article>
                 <?php endforeach; ?>
@@ -329,14 +332,14 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section>
             <h2 class="page-title">Area dati personali</h2>
             <div class="admin-grid">
-                <form method="post" action="/?action=update_profile" class="stack-form">
+                <form method="post" action="<?= e(route_url('update_profile')) ?>" class="stack-form">
                     <h3>Dati profilo</h3>
                     <label>Nome completo <input type="text" name="name" value="<?= e($user['name']) ?>" required></label>
                     <label>Email <input type="email" name="email" value="<?= e($user['email']) ?>" required></label>
                     <label>Ruolo <input type="text" value="<?= e($user['role']) ?>" disabled></label>
                     <button type="submit">Salva dati personali</button>
                 </form>
-                <form method="post" action="/?action=change_password" class="stack-form" id="password-box">
+                <form method="post" action="<?= e(route_url('change_password')) ?>" class="stack-form" id="password-box">
                     <h3>Cambio password</h3>
                     <label>Password attuale <input type="password" name="current_password" required></label>
                     <label>Nuova password <input type="password" name="new_password" minlength="8" required></label>
@@ -350,7 +353,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <h2 class="page-title">Contatti e richieste</h2>
             <p>Da questa pagina si possono inviare richieste generali, cancellazioni ricette e richieste per inserire un nuovo cuoco nell'elenco gestito dall'admin.</p>
             <div class="admin-grid">
-                <form class="stack-form" action="/?action=save_contact_request" method="post">
+                <form class="stack-form" action="<?= e(route_url('save_contact_request')) ?>" method="post">
                     <input type="hidden" name="request_type" value="deletion">
                     <h3>Richiesta cancellazione ricetta</h3>
                     <label>Nome <input type="text" name="name" required></label>
@@ -360,7 +363,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     <label>Motivazione dettagliata <textarea name="message" rows="6" required></textarea></label>
                     <button type="submit">Invia richiesta</button>
                 </form>
-                <form class="stack-form" action="/?action=save_contact_request" method="post">
+                <form class="stack-form" action="<?= e(route_url('save_contact_request')) ?>" method="post">
                     <input type="hidden" name="request_type" value="cook">
                     <h3>Richiesta inserimento cuoco</h3>
                     <label>Richiedente <input type="text" name="name" required></label>
@@ -380,7 +383,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
         <section>
             <h2 class="page-title">Pannello amministrazione</h2>
             <div class="admin-grid">
-                <form method="post" action="/?action=admin_save_home_media" enctype="multipart/form-data" class="stack-form">
+                <form method="post" action="<?= e(route_url('admin_save_home_media')) ?>" enctype="multipart/form-data" class="stack-form">
                     <h3>Slider e grafica Home</h3>
                     <p class="helper-text">Carica una o più foto insieme e scegli la grafica della Home. Le immagini scorrono automaticamente con dissolvenza.</p>
                     <label>Grafica Home
@@ -396,7 +399,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     <p class="helper-text">Puoi selezionare più file nello stesso caricamento. Se non scegli nuovi file, viene salvata solo la grafica.</p>
                     <button type="submit">Carica e pubblica</button>
                 </form>
-                <form method="post" action="/?action=admin_reset_home_hero" class="stack-form">
+                <form method="post" action="<?= e(route_url('admin_reset_home_hero')) ?>" class="stack-form">
                     <h3>Ripristina slider predefinito</h3>
                     <p class="helper-text">Elimina tutte le foto caricate e torna all'immagine standard della Home.</p>
                     <button type="submit" class="secondary-button">Ripristina foto default</button>
@@ -411,7 +414,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <img src="<?= e(media_url($slide['path'])) ?>" alt="<?= e($slide['caption'] ?: 'Foto Home') ?>" class="admin-preview">
                             <p><strong><?= e($slide['caption'] ?: 'Foto Home') ?></strong></p>
                             <?php if (!empty($slide['id'])): ?>
-                                <form method="post" action="/?action=admin_delete_home_slide" class="stack-form small-form">
+                                <form method="post" action="<?= e(route_url('admin_delete_home_slide')) ?>" class="stack-form small-form">
                                     <input type="hidden" name="slide_id" value="<?= (int) $slide['id'] ?>">
                                     <button type="submit" class="secondary-button">Elimina foto</button>
                                 </form>
@@ -423,19 +426,19 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 </div>
             </div>
             <div class="admin-grid">
-                <form method="post" action="/?action=admin_add_catalog" class="stack-form">
+                <form method="post" action="<?= e(route_url('admin_add_catalog')) ?>" class="stack-form">
                     <input type="hidden" name="catalog_type" value="ingredient">
                     <h3>Aggiungi ingrediente mancante</h3>
                     <input type="text" name="name" placeholder="Nuovo ingrediente">
                     <button type="submit">Aggiungi ingrediente</button>
                 </form>
-                <form method="post" action="/?action=admin_add_catalog" class="stack-form">
+                <form method="post" action="<?= e(route_url('admin_add_catalog')) ?>" class="stack-form">
                     <input type="hidden" name="catalog_type" value="utensil">
                     <h3>Aggiungi utensile mancante</h3>
                     <input type="text" name="name" placeholder="Nuovo utensile">
                     <button type="submit">Aggiungi utensile</button>
                 </form>
-                <form method="post" action="/?action=admin_add_cook" class="stack-form">
+                <form method="post" action="<?= e(route_url('admin_add_cook')) ?>" class="stack-form">
                     <h3>Aggiungi cuoco approvato</h3>
                     <label>Nome e cognome <input type="text" name="full_name" required></label>
                     <label>Data di nascita <input type="date" name="birth_date"></label>
@@ -471,7 +474,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <h3>Richieste nuovi cuochi</h3>
                 <div class="recipe-grid">
                     <?php foreach ($cookRequests as $request): ?>
-                        <form method="post" action="/?action=admin_add_cook" class="stack-form recipe-card">
+                        <form method="post" action="<?= e(route_url('admin_add_cook')) ?>" class="stack-form recipe-card">
                             <input type="hidden" name="contact_request_id" value="<?= (int) $request['id'] ?>">
                             <h4><?= e($request['cook_full_name'] ?: 'Nuovo cuoco') ?></h4>
                             <label>Nome e cognome <input type="text" name="full_name" value="<?= e($request['cook_full_name'] ?: '') ?>" required></label>
