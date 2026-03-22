@@ -19,6 +19,9 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <p class="landing-kicker">Benvenuti</p>
                 <h1 class="landing-title">WWW.NONNACELESTE.IT</h1>
                 <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste.</p>
+                <?php if ($flash): ?>
+                    <div class="flash <?= e($flash['type']) ?>"><?= e($flash['message']) ?></div>
+                <?php endif; ?>
                 <form method="post" action="<?= e(route_url('login')) ?>" class="stack-form landing-form">
                     <label>Email <input type="email" name="email" placeholder="email" required></label>
                     <label>Password <input type="password" name="password" placeholder="password" required></label>
