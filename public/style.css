@@ -19,11 +19,15 @@ img { max-width: 100%; display: block; }
 .site-branding h1, .landing-title { margin: 0; font-weight: 800; letter-spacing: .14em; font-family: "Old English Text MT", "Goudy Text MT", "Palatino Linotype", Georgia, serif; }
 .site-branding h1 { font-size: clamp(2rem, 4vw, 3.35rem); }
 .landing-title {
-  font-size: clamp(1.7rem, 4.6vw, 3.3rem);
-  letter-spacing: .08em;
-  line-height: 1.05;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  font-size: clamp(.82rem, 2.1vw, 1.28rem);
+  letter-spacing: .015em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .site-branding p { margin: 0; font-size: 1.05rem; color: var(--muted); }
 .site-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: .9rem; font-size: .98rem; color: var(--accent-dark); }
@@ -74,6 +78,7 @@ img { max-width: 100%; display: block; }
 .secondary-button { background: #f2d6ce !important; color: var(--accent-dark) !important; }
 .inline-grid { display: grid; grid-template-columns: minmax(0, 2fr) 140px 110px; gap: .75rem; margin-bottom: .5rem; align-items: start; }
 .ingredient-picker { display: grid; gap: .45rem; }
+.cooking-grid { grid-template-columns: minmax(0, 1.6fr) 120px 160px; }
 .filter-input, .ingredient-search { width: 100%; }
 .filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .filters select, .filters button { padding: .7rem; border-radius: 10px; border: 1px solid var(--border); }
@@ -103,7 +108,7 @@ img { max-width: 100%; display: block; }
 .landing-page.has-cover { position: relative; }
 .landing-page.has-cover::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.42); }
 .landing-shell { position: relative; z-index: 1; width: min(100%, 1200px); display: grid; place-items: center; }
-.landing-card { width: min(100%, 560px); text-align: center; background: rgba(255,255,255,.92); }
+.landing-card { width: min(100%, 560px); text-align: center; background: rgba(255,255,255,.92); overflow: hidden; }
 .landing-copy { line-height: 1.7; color: var(--muted); margin: 1rem 0 1.2rem; }
 .landing-form { text-align: left; }
 @media (max-width: 860px) {
@@ -112,7 +117,7 @@ img { max-width: 100%; display: block; }
   .site-branding, .auth-box, .user-links { text-align: center; justify-content: center; }
   .auth-box { grid-row: 1; }
   .inline-grid { grid-template-columns: 1fr; }
-  .landing-title { font-size: clamp(1.5rem, 9vw, 2.3rem); letter-spacing: .05em; }
+  .landing-title { font-size: clamp(.76rem, 4.8vw, 1rem); letter-spacing: .01em; }
 }
 @media print {
   .site-header, .print-actions, form, nav, script { display: none !important; }
