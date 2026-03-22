@@ -29,7 +29,22 @@ function is_superadmin(): bool
 
 function redirect(string $path): never
 {
-    header('Location: ' . $path);
+    if (preg_match('#^https?://#i', $path) === 1) {
+        $location = $path;
+    } elseif (str_starts_with($path, '/')) {
+        $basePath = app_base_path();
+        $location = $basePath !== ''
+            && ($path === $basePath
+                || str_starts_with($path, $basePath . '/')
+                || str_starts_with($path, $basePath . '?')
+                || str_starts_with($path, $basePath . '#'))
+            ? $path
+            : app_url($path);
+    } else {
+        $location = app_url($path);
+    }
+
+    header('Location: ' . $location);
     exit;
 }
 
@@ -73,6 +88,55 @@ function current_request_path(): string
     $path = parse_url($requestUri, PHP_URL_PATH);
 
     return is_string($path) && $path !== '' ? $path : '/';
+}
+
+function app_base_path(): string
+{
+    $scriptName = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? ''));
+    $directory = str_replace('\\', '/', dirname($scriptName));
+    $normalized = rtrim($directory, '/.');
+
+    return $normalized === '' || $normalized === '/' ? '' : $normalized;
+}
+
+function app_url(string $path = '/', array $query = [], string $fragment = ''): string
+{
+    if (preg_match('#^https?://#i', $path) === 1) {
+        return $path;
+    }
+
+    $normalizedPath = $path === '' ? '/' : $path;
+    if (!str_starts_with($normalizedPath, '/')) {
+        $normalizedPath = '/' . $normalizedPath;
+    }
+
+    $basePath = app_base_path();
+    $url = ($basePath === '' ? '' : $basePath) . $normalizedPath;
+
+    if ($query !== []) {
+        $separator = str_contains($url, '?') ? '&' : '?';
+        $url .= $separator . http_build_query($query);
+    }
+
+    if ($fragment !== '') {
+        $url .= '#' . rawurlencode($fragment);
+    }
+
+    return $url;
+}
+
+function route_url(?string $action = null, array $params = [], string $fragment = ''): string
+{
+    if ($action !== null) {
+        $params = ['action' => $action] + $params;
+    }
+
+    return app_url('/', $params, $fragment);
+}
+
+function asset_url(string $path): string
+{
+    return app_url('/' . ltrim($path, '/'));
 }
 
 function register_active_session(?array $user): void
@@ -132,10 +196,10 @@ function media_url(?string $path): string
 
     $normalizedPath = ltrim($trimmedPath, '/');
     if (str_starts_with($normalizedPath, 'storage/')) {
-        return '/?action=media&path=' . rawurlencode($normalizedPath);
+        return route_url('media', ['path' => $normalizedPath]);
     }
 
-    return str_starts_with($trimmedPath, '/') ? $trimmedPath : '/' . $normalizedPath;
+    return asset_url($normalizedPath);
 }
 
 function media_storage_path(?string $path): ?string
