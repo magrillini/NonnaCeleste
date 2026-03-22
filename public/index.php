@@ -174,7 +174,7 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $db->prepare('INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes,temperature) VALUES(?,?,?,?)')->execute([$recipeId, (int) $methodId, $minutes, $temperature > 0 ? $temperature : null]);
         }
 
-        save_uploaded_images($_FILES['gallery'] ?? [], $recipeId, (int) $user['id']);
+        save_uploaded_images($_FILES['gallery_photo'] ?? [], $recipeId, (int) $user['id'], post('gallery_caption'));
         $db->commit();
         flash('success', 'Ricetta salvata correttamente.');
         redirect(route_url('recipe', ['id' => $recipeId]));

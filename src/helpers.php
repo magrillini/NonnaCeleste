@@ -229,11 +229,11 @@ function media_storage_path(?string $path): ?string
     return is_file($realPath) ? $realPath : null;
 }
 
-function save_uploaded_images(array $files, int $recipeId, int $userId): void
+function save_uploaded_images(array $file, int $recipeId, int $userId, ?string $caption = null): void
 {
     global $db;
 
-    if (!isset($files['tmp_name']) || !is_array($files['tmp_name'])) {
+    if (($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || empty($file['tmp_name'])) {
         return;
     }
 
@@ -242,29 +242,28 @@ function save_uploaded_images(array $files, int $recipeId, int $userId): void
         mkdir($targetDir, 0777, true);
     }
 
-    $stmt = $db->prepare(
-        'INSERT INTO recipe_images(recipe_id,path,caption,uploaded_by_user_id,created_at) VALUES(?,?,?,?,?)'
-    );
+    $extension = pathinfo($file['name'] ?? 'jpg', PATHINFO_EXTENSION) ?: 'jpg';
+    $name = sprintf('recipe_%d_%s.%s', $recipeId, uniqid('', true), $extension);
+    $destination = $targetDir . '/' . $name;
 
-    foreach ($files['tmp_name'] as $index => $tmpPath) {
-        if (($files['error'][$index] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK || !$tmpPath) {
-            continue;
-        }
-
-        $extension = pathinfo($files['name'][$index] ?? 'jpg', PATHINFO_EXTENSION) ?: 'jpg';
-        $name = sprintf('recipe_%d_%s.%s', $recipeId, uniqid('', true), $extension);
-        $destination = $targetDir . '/' . $name;
-
-        if (move_uploaded_file($tmpPath, $destination)) {
-            $stmt->execute([
-                $recipeId,
-                'storage/gallery/' . $name,
-                null,
-                $userId,
-                date(DATE_ATOM),
-            ]);
-        }
+    if (!move_uploaded_file($file['tmp_name'], $destination)) {
+        return;
     }
+
+    $cleanCaption = trim((string) $caption);
+    if ($cleanCaption === '') {
+        $cleanCaption = pathinfo((string) ($file['name'] ?? ''), PATHINFO_FILENAME) ?: null;
+    }
+
+    $db->prepare(
+        'INSERT INTO recipe_images(recipe_id,path,caption,uploaded_by_user_id,created_at) VALUES(?,?,?,?,?)'
+    )->execute([
+        $recipeId,
+        'storage/gallery/' . $name,
+        $cleanCaption,
+        $userId,
+        date(DATE_ATOM),
+    ]);
 }
 
 function site_setting(string $key, ?string $default = null): ?string
