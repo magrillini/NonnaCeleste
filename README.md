@@ -42,7 +42,7 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
 ## Deploy su Aruba condiviso
 1. Caricare l'intero progetto via FTP/SFTP mantenendo la struttura delle cartelle.
 2. Se Aruba consente di impostare la document root del dominio, puntarla alla cartella `public/`.
-3. Se invece il dominio punta obbligatoriamente alla root del progetto, usare i file `index.php` e `.htaccess` presenti in root: inoltrano richieste e asset verso `public/`.
+3. Se invece il dominio punta obbligatoriamente alla root del progetto, lasciare in root i file `index.php` e `.htaccess`: inoltrano richieste e asset verso `public/` senza dover cambiare i link dell'applicazione.
 4. Verificare che il runtime abbia PHP 8.2+ con estensioni `pdo_sqlite` e `sqlite3`.
 5. Assicurarsi che le cartelle `data/`, `storage/`, `storage/gallery/` e `storage/home/` siano scrivibili da PHP.
 6. Al primo accesso l'app creerà automaticamente `data/nonnaceleste.sqlite`, applicherà le migrazioni e caricherà i dati seed.

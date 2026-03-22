@@ -29,7 +29,22 @@ function is_superadmin(): bool
 
 function redirect(string $path): never
 {
-    header('Location: ' . app_url($path));
+    if (preg_match('#^https?://#i', $path) === 1) {
+        $location = $path;
+    } elseif (str_starts_with($path, '/')) {
+        $basePath = app_base_path();
+        $location = $basePath !== ''
+            && ($path === $basePath
+                || str_starts_with($path, $basePath . '/')
+                || str_starts_with($path, $basePath . '?')
+                || str_starts_with($path, $basePath . '#'))
+            ? $path
+            : app_url($path);
+    } else {
+        $location = app_url($path);
+    }
+
+    header('Location: ' . $location);
     exit;
 }
 
@@ -116,7 +131,7 @@ function route_url(?string $action = null, array $params = [], string $fragment 
         $params = ['action' => $action] + $params;
     }
 
-    return app_url('/index.php', $params, $fragment);
+    return app_url('/', $params, $fragment);
 }
 
 function asset_url(string $path): string

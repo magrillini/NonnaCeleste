@@ -39,19 +39,19 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         flash('error', 'Credenziali non valide.');
     }
-    redirect('/index.php');
+    redirect(route_url('home'));
 }
 
 if ($action === 'logout') {
     unregister_active_session();
     session_destroy();
-    redirect('/index.php');
+    redirect(route_url('home'));
 }
 
 if ($action === 'update_profile' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$user) {
         flash('error', 'Devi accedere per aggiornare i dati personali.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     $name = trim((string) post('name'));
@@ -59,27 +59,27 @@ if ($action === 'update_profile' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($name === '' || $email === '') {
         flash('error', 'Nome ed email sono obbligatori.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     $existingUser = $db->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
     $existingUser->execute([$email, (int) $user['id']]);
     if ($existingUser->fetch()) {
         flash('error', 'Questa email è già usata da un altro account.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     $db->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?')
         ->execute([$name, $email, (int) $user['id']]);
 
     flash('success', 'Dati personali aggiornati correttamente.');
-    redirect('/index.php?action=profile');
+    redirect(route_url('profile'));
 }
 
 if ($action === 'change_password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$user) {
         flash('error', 'Devi accedere per cambiare password.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     $currentPassword = (string) post('current_password');
@@ -88,30 +88,30 @@ if ($action === 'change_password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!password_verify($currentPassword, (string) $user['password'])) {
         flash('error', 'La password attuale non è corretta.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     if (strlen($newPassword) < 8) {
         flash('error', 'La nuova password deve contenere almeno 8 caratteri.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     if ($newPassword !== $confirmPassword) {
         flash('error', 'La conferma password non coincide.');
-        redirect('/index.php?action=profile');
+        redirect(route_url('profile'));
     }
 
     $db->prepare('UPDATE users SET password = ? WHERE id = ?')
         ->execute([password_hash($newPassword, PASSWORD_DEFAULT), (int) $user['id']]);
 
     flash('success', 'Password aggiornata correttamente.');
-    redirect('/index.php?action=profile');
+    redirect(route_url('profile'));
 }
 
 if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$user) {
         flash('error', 'Devi accedere per inserire una ricetta.');
-        redirect('/index.php?action=submit');
+        redirect(route_url('submit'));
     }
 
     $cookId = (int) post('cook_id', 0);
@@ -124,7 +124,7 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (!$cook) {
         flash('error', 'Seleziona un cuoco presente nell\'elenco approvato dall\'admin.');
-        redirect('/index.php?action=submit');
+        redirect(route_url('submit'));
     }
 
     $db->beginTransaction();
@@ -176,18 +176,18 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         save_uploaded_images($_FILES['gallery'] ?? [], $recipeId, (int) $user['id']);
         $db->commit();
         flash('success', 'Ricetta salvata correttamente.');
-        redirect('/index.php?action=recipe&id=' . $recipeId);
+        redirect(route_url('recipe', ['id' => $recipeId]));
     } catch (Throwable $e) {
         $db->rollBack();
         flash('error', 'Errore nel salvataggio: ' . $e->getMessage());
-        redirect('/index.php?action=submit');
+        redirect(route_url('submit'));
     }
 }
 
 if ($action === 'save_comment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$user) {
         flash('error', 'Devi accedere per commentare.');
-        redirect('/index.php?action=recipe&id=' . (int) post('recipe_id'));
+        redirect(route_url('recipe', ['id' => (int) post('recipe_id')]));
     }
     $recipeId = (int) post('recipe_id');
     $commentId = (int) post('comment_id', 0);
@@ -203,7 +203,7 @@ if ($action === 'save_comment' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ->execute([$recipeId, $user['id'], post('body'), date(DATE_ATOM), date(DATE_ATOM)]);
     }
     flash('success', 'Commento salvato.');
-    redirect('/index.php?action=recipe&id=' . $recipeId);
+    redirect(route_url('recipe', ['id' => $recipeId]));
 }
 
 if ($action === 'save_contact_request' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -225,7 +225,7 @@ if ($action === 'save_contact_request' && $_SERVER['REQUEST_METHOD'] === 'POST')
             date(DATE_ATOM),
         ]);
     flash('success', $requestType === 'cook' ? 'Richiesta per nuovo cuoco inviata all\'admin.' : 'Richiesta inviata correttamente.');
-    redirect('/index.php?action=contacts');
+    redirect(route_url('contacts'));
 }
 
 if ($action === 'admin_add_catalog' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
@@ -235,14 +235,14 @@ if ($action === 'admin_add_catalog' && $_SERVER['REQUEST_METHOD'] === 'POST' && 
         $db->prepare("INSERT OR IGNORE INTO {$table}(name,created_by_role) VALUES(?,?)")->execute([$name, current_user()['role']]);
         flash('success', 'Elemento catalogo aggiunto.');
     }
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     $fullName = trim((string) post('full_name'));
     if ($fullName === '') {
         flash('error', 'Il nome del cuoco è obbligatorio.');
-        redirect('/index.php?action=admin');
+        redirect(route_url('admin'));
     }
 
     $db->prepare('INSERT INTO cooks(full_name,birth_date,phone,email,parent_names,notes,created_by_user_id,created_at) VALUES(?,?,?,?,?,?,?,?)')
@@ -263,7 +263,7 @@ if ($action === 'admin_add_cook' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_
     }
 
     flash('success', 'Cuoco aggiunto all\'elenco.');
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
@@ -280,7 +280,7 @@ if ($action === 'admin_save_home_media' && $_SERVER['REQUEST_METHOD'] === 'POST'
         flash('error', 'Errore aggiornamento Home: ' . $e->getMessage());
     }
 
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_save_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
@@ -294,25 +294,25 @@ if ($action === 'admin_save_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST
         flash('error', 'Errore aggiornamento pagina login: ' . $e->getMessage());
     }
 
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_reset_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     reset_login_cover_image();
     flash('success', 'Immagine della pagina login ripristinata.');
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     delete_home_slide((int) post('slide_id', 0));
     flash('success', 'Foto Home eliminata.');
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 if ($action === 'admin_reset_home_hero' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     reset_home_slides();
     flash('success', 'Slider Home ripristinato alle immagini predefinite.');
-    redirect('/index.php?action=admin');
+    redirect(route_url('admin'));
 }
 
 $ingredients = fetch_all($db, 'SELECT * FROM ingredients ORDER BY name');
