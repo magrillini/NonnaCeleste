@@ -17,7 +17,7 @@ img { max-width: 100%; display: block; }
 .site-header-spacer { min-height: 1px; }
 .site-branding { text-align: center; display: grid; gap: .35rem; }
 .site-branding h1 { margin: 0; font-size: clamp(2rem, 4vw, 3.2rem); font-weight: 800; letter-spacing: .12em; font-family: "Cormorant Garamond", "Palatino Linotype", Georgia, serif; color: var(--accent-dark); }
-.landing-title { margin: 0; font-size: clamp(2rem, 4.8vw, 3.25rem); line-height: 1.05; letter-spacing: .08em; font-weight: 700; font-family: "Cormorant Garamond", "Book Antiqua", Georgia, serif; background: linear-gradient(135deg, #c86a3f 0%, #9d3d2f 55%, #712b20 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-wrap: balance; }
+.landing-title { margin: 0; font-size: clamp(1.55rem, 4vw, 2.7rem); line-height: 1.08; letter-spacing: .04em; font-weight: 700; font-family: "Cormorant Garamond", "Book Antiqua", Georgia, serif; background: linear-gradient(135deg, #c86a3f 0%, #9d3d2f 55%, #712b20 100%); -webkit-background-clip: text; background-clip: text; color: transparent; text-wrap: balance; overflow-wrap: anywhere; }
 .site-branding p { margin: 0; font-size: 1.05rem; color: var(--muted); }
 .site-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: .9rem; font-size: .98rem; color: var(--accent-dark); }
 .site-stats span { background: rgba(255,255,255,.72); border: 1px solid var(--border); border-radius: 999px; padding: .55rem .95rem; }
@@ -96,9 +96,9 @@ img { max-width: 100%; display: block; }
 .landing-page.has-cover { position: relative; }
 .landing-page.has-cover::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.42); }
 .landing-shell { position: relative; z-index: 1; width: min(100%, 1200px); display: grid; place-items: center; }
-.landing-card { width: min(100%, 560px); text-align: center; background: rgba(255,255,255,.94); padding: 1.75rem 1.9rem; }
+.landing-card { width: min(100%, 520px); text-align: center; background: rgba(255,255,255,.94); padding: 1.65rem 1.6rem; }
 .landing-kicker { color: var(--accent); font-weight: 700; }
-.landing-copy { line-height: 1.7; color: var(--muted); margin: 1rem 0 1.2rem; max-width: 42ch; justify-self: center; }
+.landing-copy { line-height: 1.6; color: var(--muted); margin: .85rem 0 1.1rem; max-width: 28ch; justify-self: center; font-size: 1.05rem; }
 .landing-form { text-align: left; }
 @media (max-width: 860px) {
   .site-header-top, .hero, .grid-buttons, .selection-layout { grid-template-columns: 1fr; }

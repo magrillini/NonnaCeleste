@@ -18,7 +18,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <div class="landing-card">
                 <p class="landing-kicker">Benvenuti</p>
                 <h1 class="landing-title">WWW.NONNACELESTE.IT</h1>
-                <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste. L'immagine di sfondo può essere gestita soltanto da Admin e Super Admin.</p>
+                <p class="landing-copy">Accedi per entrare nella casa digitale di Nonna Celeste.</p>
                 <form method="post" action="/?action=login" class="stack-form landing-form">
                     <label>Email <input type="email" name="email" placeholder="email" required></label>
                     <label>Password <input type="password" name="password" placeholder="password" required></label>
