@@ -66,6 +66,7 @@ img { max-width: 100%; display: block; }
 .card-button, .recipe-card, .flash, .stack-form, .comment-box, .photo-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.04); }
 .card-button { padding: 1.25rem; text-align: center; font-weight: bold; }
 .recipe-grid, .photo-gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.photo-gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .85rem; align-items: start; }
 .recipe-card, .photo-card { padding: 1rem; }
 .photo-card { display: grid; gap: .85rem; }
 .photo-thumb-button { border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; border-radius: 14px; overflow: hidden; aspect-ratio: 4 / 3; }
