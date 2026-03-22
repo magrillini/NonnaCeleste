@@ -66,6 +66,11 @@ if ($action === 'update_profile' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         redirect('/?action=profile');
     }
 
+    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        flash('error', 'Inserisci un indirizzo email valido.');
+        redirect('/?action=profile');
+    }
+
     $existingUser = $db->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
     $existingUser->execute([$email, (int) $user['id']]);
     if ($existingUser->fetch()) {
@@ -97,6 +102,11 @@ if ($action === 'change_password' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (strlen($newPassword) < 8) {
         flash('error', 'La nuova password deve contenere almeno 8 caratteri.');
+        redirect('/?action=profile');
+    }
+
+    if (password_verify($newPassword, (string) $user['password'])) {
+        flash('error', 'La nuova password deve essere diversa da quella attuale.');
         redirect('/?action=profile');
     }
 
