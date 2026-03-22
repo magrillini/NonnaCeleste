@@ -1,7 +1,29 @@
 <?php
 $holidays = ['Natale','Capodanno','Epifania','Carnevale','Pasqua','Pasquetta','Ferragosto','Ognissanti','Immacolata','Festa patronale'];
-$mealTimes = ['colazione','pranzo','merenda','cena'];
-$courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
+$mealTimes = [
+    'nessuna' => 'Nessuna',
+    'buona sempre' => 'Buona Sempre',
+    'colazione' => 'Colazione',
+    'pranzo' => 'Pranzo',
+    'merenda' => 'Merenda',
+    'cena' => 'Cena',
+    'pic nic' => 'Pic Nic',
+];
+$courseTypes = [
+    'aperitivo' => 'Aperitivo',
+    'antipasto' => 'Antipasto',
+    'primo' => 'Primo',
+    'secondo' => 'Secondo',
+    'contorno' => 'Contorno',
+    'dolce' => 'Dolce',
+];
+$temperatureOptions = range(60, 200, 10);
+$unitLabels = [
+    'gr' => 'gr',
+    'cl' => 'cl',
+    'n' => 'N. Numero',
+    'qb' => 'qb',
+];
 ?>
 <!doctype html>
 <html lang="it">
@@ -90,7 +112,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                     </select>
                     <select name="meal_time">
                         <option value="">Tutti i momenti</option>
-                        <?php foreach ($mealTimes as $meal): ?><option value="<?= e($meal) ?>" <?= query('meal_time') === $meal ? 'selected' : '' ?>><?= e(ucfirst($meal)) ?></option><?php endforeach; ?>
+                        <?php foreach ($mealTimes as $mealValue => $mealLabel): ?><option value="<?= e($mealValue) ?>" <?= query('meal_time') === $mealValue ? 'selected' : '' ?>><?= e($mealLabel) ?></option><?php endforeach; ?>
                     </select>
                     <button type="submit">Filtra</button>
                 </form>
@@ -102,7 +124,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <h3><a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>"><?= e($item['title']) ?></a></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
-                        <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
+                        <p><strong>Momento:</strong> <?= e($mealTimes[$item['meal_time']] ?? $item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($courseTypes[$item['course_type']] ?? $item['course_type']) : '' ?></p>
                         <p><strong>Autore inserimento:</strong> <?= e($item['author_name']) ?></p>
                     </article>
                 <?php endforeach; ?>
@@ -137,13 +159,13 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 </label>
                 <label>Momento della giornata
                     <select name="meal_time" required>
-                        <?php foreach ($mealTimes as $meal): ?><option value="<?= e($meal) ?>"><?= e(ucfirst($meal)) ?></option><?php endforeach; ?>
+                        <?php foreach ($mealTimes as $mealValue => $mealLabel): ?><option value="<?= e($mealValue) ?>"><?= e($mealLabel) ?></option><?php endforeach; ?>
                     </select>
                 </label>
                 <label>Portata pranzo/cena
                     <select name="course_type">
                         <option value="">Non applicabile</option>
-                        <?php foreach ($courseTypes as $course): ?><option value="<?= e($course) ?>"><?= e(ucfirst($course)) ?></option><?php endforeach; ?>
+                        <?php foreach ($courseTypes as $courseValue => $courseLabel): ?><option value="<?= e($courseValue) ?>"><?= e($courseLabel) ?></option><?php endforeach; ?>
                     </select>
                 </label>
 
@@ -162,6 +184,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <select name="ingredient_units[]">
                                 <option value="gr">gr</option>
                                 <option value="cl">cl</option>
+                                <option value="n">N. Numero</option>
                                 <option value="qb">qb</option>
                             </select>
                         </div>
@@ -180,6 +203,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                             <select name="ingredient_units[]">
                                 <option value="gr">gr</option>
                                 <option value="cl">cl</option>
+                                <option value="n">N. Numero</option>
                                 <option value="qb">qb</option>
                             </select>
                         </div>
@@ -211,12 +235,16 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                 <fieldset>
                     <legend>Modalità di cottura</legend>
                     <?php for ($i = 0; $i < 3; $i++): ?>
-                        <div class="inline-grid">
+                        <div class="inline-grid cooking-grid">
                             <select name="cooking_methods[]">
                                 <option value="">Modalità</option>
                                 <?php foreach ($cookingMethods as $method): ?><option value="<?= (int) $method['id'] ?>"><?= e($method['name']) ?></option><?php endforeach; ?>
                             </select>
                             <input type="number" min="0" name="cooking_minutes[]" placeholder="Minuti">
+                            <select name="cooking_temperatures[]">
+                                <option value="">Temperatura</option>
+                                <?php foreach ($temperatureOptions as $temperature): ?><option value="<?= $temperature ?>"><?= $temperature ?> °C</option><?php endforeach; ?>
+                            </select>
                         </div>
                     <?php endfor; ?>
                 </fieldset>
@@ -240,13 +268,13 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
             <p><strong>Cuoco:</strong> <?= e($recipe['cook_name']) ?></p>
             <p><strong>Tipologia:</strong> <?= e($recipe['visibility_type']) ?></p>
             <p><strong>Festività:</strong> <?= e($recipe['holiday'] ?: 'Nessuna') ?></p>
-            <p><strong>Momento della giornata:</strong> <?= e($recipe['meal_time']) ?><?= $recipe['course_type'] ? ' / ' . e($recipe['course_type']) : '' ?></p>
+            <p><strong>Momento della giornata:</strong> <?= e($mealTimes[$recipe['meal_time']] ?? $recipe['meal_time']) ?><?= $recipe['course_type'] ? ' / ' . e($courseTypes[$recipe['course_type']] ?? $recipe['course_type']) : '' ?></p>
             <p><strong>Inserita da:</strong> <?= e($recipe['author_name']) ?></p>
 
             <h3>Ingredienti</h3>
             <ul>
                 <?php foreach ($recipeIngredients as $item): ?>
-                    <li><?= e($item['name']) ?> - <?= $item['quantity_unit'] === 'qb' ? 'qb' : e((string) $item['quantity_value'] . ' ' . $item['quantity_unit']) ?></li>
+                    <li><?= e($item['name']) ?> - <?= $item['quantity_unit'] === 'qb' ? 'qb' : e((string) $item['quantity_value']) . ' ' . e($unitLabels[$item['quantity_unit']] ?? $item['quantity_unit']) ?></li>
                 <?php endforeach; ?>
             </ul>
 
@@ -257,7 +285,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
 
             <h3>Cottura</h3>
             <ul>
-                <?php foreach ($recipeMethods as $item): ?><li><?= e($item['name']) ?> - <?= (int) $item['minutes'] ?> minuti</li><?php endforeach; ?>
+                <?php foreach ($recipeMethods as $item): ?><li><?= e($item['name']) ?> - <?= (int) $item['minutes'] ?> minuti<?= !empty($item['temperature']) ? ' / ' . e((string) $item['temperature']) . ' °C' : '' ?></li><?php endforeach; ?>
             </ul>
 
             <h3>Esecuzione</h3>
@@ -303,7 +331,7 @@ $courseTypes = ['antipasto','primo','secondo','contorno','dolce'];
                         <h3><?= e($item['title']) ?></h3>
                         <p><strong>Cuoco:</strong> <?= e($item['cook_name']) ?></p>
                         <p><strong>Festività:</strong> <?= e($item['holiday'] ?: 'Nessuna') ?></p>
-                        <p><strong>Momento:</strong> <?= e($item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($item['course_type']) : '' ?></p>
+                        <p><strong>Momento:</strong> <?= e($mealTimes[$item['meal_time']] ?? $item['meal_time']) ?><?= $item['course_type'] ? ' / ' . e($courseTypes[$item['course_type']] ?? $item['course_type']) : '' ?></p>
                         <a href="<?= e(route_url('recipe', ['id' => (int) $item['id']])) ?>">Apri la ricetta</a>
                     </article>
                 <?php endforeach; ?>
