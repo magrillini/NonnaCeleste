@@ -38,3 +38,12 @@ Prima base applicativa PHP per la gestione di ricette tradizionali e familiari, 
 ## Note
 - In questa fase l'integrazione Google Calendar è implementata come link di creazione evento precompilato. Una futura iterazione può sostituirla con OAuth/API complete.
 - L'upload immagini salva i file in `storage/`. La Home può essere aggiornata dal pannello admin sia come foto hero principale sia come slider con più foto e grafica selezionabile; i file vengono salvati in `storage/home/`.
+
+## Deploy su Aruba condiviso
+1. Caricare l'intero progetto via FTP/SFTP mantenendo la struttura delle cartelle.
+2. Se Aruba consente di impostare la document root del dominio, puntarla alla cartella `public/`.
+3. Se invece il dominio punta obbligatoriamente alla root del progetto, lasciare in root i file `index.php` e `.htaccess`: inoltrano richieste e asset verso `public/` senza dover cambiare i link dell'applicazione.
+4. Verificare che il runtime abbia PHP 8.2+ con estensioni `pdo_sqlite` e `sqlite3`.
+5. Assicurarsi che le cartelle `data/`, `storage/`, `storage/gallery/` e `storage/home/` siano scrivibili da PHP.
+6. Al primo accesso l'app creerà automaticamente `data/nonnaceleste.sqlite`, applicherà le migrazioni e caricherà i dati seed.
+7. Dopo il caricamento testare: apertura home, login, inserimento ricetta e upload immagine.
