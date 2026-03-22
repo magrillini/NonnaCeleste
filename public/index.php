@@ -304,6 +304,15 @@ if ($action === 'admin_reset_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POS
     redirect(route_url('admin'));
 }
 
+if ($action === 'admin_select_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    if (set_login_cover_image((string) post('login_cover_path'))) {
+        flash('success', 'Sfondo della pagina login aggiornato correttamente.');
+    } else {
+        flash('error', 'Immagine di sfondo non valida.');
+    }
+    redirect(route_url('admin'));
+}
+
 if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     delete_home_slide((int) post('slide_id', 0));
     flash('success', 'Foto Home eliminata.');
@@ -374,6 +383,7 @@ usort($photoGallery, static fn (array $a, array $b): int => strcmp((string) ($b[
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
 $loginCoverImage = login_cover_image_path();
+$loginCoverImages = available_login_cover_images();
 $pageViews = increment_page_views();
 $activeUsersCount = active_logged_in_users_count();
 $totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();

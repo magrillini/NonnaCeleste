@@ -485,6 +485,45 @@ $unitLabels = [
                 </div>
             </div>
             <div class="admin-grid">
+                <form method="post" action="<?= e(route_url('admin_save_login_cover')) ?>" enctype="multipart/form-data" class="stack-form">
+                    <h3>Sfondo pagina login</h3>
+                    <p class="helper-text">Admin e superadmin possono caricare un nuovo sfondo per la pagina iniziale con login. Le immagini precedenti restano salvate nella cartella dedicata e possono essere riattivate.</p>
+                    <label>Nuova immagine sfondo
+                        <input type="file" name="login_cover_image" accept="image/jpeg,image/png,image/webp,image/gif">
+                    </label>
+                    <button type="submit">Carica nuovo sfondo</button>
+                </form>
+                <form method="post" action="<?= e(route_url('admin_reset_login_cover')) ?>" class="stack-form">
+                    <h3>Rimuovi sfondo attivo</h3>
+                    <p class="helper-text">Disattiva lo sfondo della login senza cancellare i file già presenti nella cartella delle immagini di sfondo.</p>
+                    <button type="submit" class="secondary-button">Disattiva sfondo login</button>
+                </form>
+            </div>
+            <div class="stack-form">
+                <h3>Sfondi disponibili per la login</h3>
+                <p class="helper-text">Anteprima ridotta 100 × 56 px: la cornice resta ampia ma l'immagine viene mostrata più piccola e contenuta.</p>
+                <div class="home-slide-admin-grid login-cover-library">
+                    <?php if ($loginCoverImages): ?>
+                        <?php foreach ($loginCoverImages as $coverImage): ?>
+                            <article class="recipe-card home-slide-admin-card">
+                                <img src="<?= e(media_url($coverImage['path'])) ?>" alt="<?= e($coverImage['name']) ?>" class="admin-preview login-cover-preview">
+                                <p><strong><?= e($coverImage['name']) ?></strong></p>
+                                <?php if ($loginCoverImage === $coverImage['path']): ?>
+                                    <p class="helper-text">Sfondo attualmente attivo.</p>
+                                <?php else: ?>
+                                    <form method="post" action="<?= e(route_url('admin_select_login_cover')) ?>" class="stack-form small-form">
+                                        <input type="hidden" name="login_cover_path" value="<?= e($coverImage['path']) ?>">
+                                        <button type="submit">Usa questo sfondo</button>
+                                    </form>
+                                <?php endif; ?>
+                            </article>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p class="helper-text">Non ci sono ancora sfondi caricati per la pagina login.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <div class="admin-grid">
                 <form method="post" action="<?= e(route_url('admin_add_catalog')) ?>" class="stack-form">
                     <input type="hidden" name="catalog_type" value="ingredient">
                     <h3>Aggiungi ingrediente mancante</h3>
