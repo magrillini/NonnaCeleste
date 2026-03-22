@@ -138,7 +138,7 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $user['id'],
             $visibility,
             post('holiday') ?: null,
-            post('meal_time'),
+            post('meal_time', 'nessuna'),
             post('course_type') ?: null,
             post('execution_method'),
             $visibility === 'tradizionale' ? 1 : 0,
@@ -170,10 +170,11 @@ if ($action === 'save_recipe' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 continue;
             }
             $minutes = (int) ($_POST['cooking_minutes'][$index] ?? 0);
-            $db->prepare('INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes) VALUES(?,?,?)')->execute([$recipeId, (int) $methodId, $minutes]);
+            $temperature = (int) ($_POST['cooking_temperatures'][$index] ?? 0);
+            $db->prepare('INSERT INTO recipe_cooking_methods(recipe_id,cooking_method_id,minutes,temperature) VALUES(?,?,?,?)')->execute([$recipeId, (int) $methodId, $minutes, $temperature > 0 ? $temperature : null]);
         }
 
-        save_uploaded_images($_FILES['gallery'] ?? [], $recipeId, (int) $user['id']);
+        save_uploaded_images($_FILES['gallery_photo'] ?? [], $recipeId, (int) $user['id'], post('gallery_caption'));
         $db->commit();
         flash('success', 'Ricetta salvata correttamente.');
         redirect(route_url('recipe', ['id' => $recipeId]));
@@ -303,6 +304,15 @@ if ($action === 'admin_reset_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POS
     redirect(route_url('admin'));
 }
 
+if ($action === 'admin_select_login_cover' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
+    if (set_login_cover_image((string) post('login_cover_path'))) {
+        flash('success', 'Sfondo della pagina login aggiornato correttamente.');
+    } else {
+        flash('error', 'Immagine di sfondo non valida.');
+    }
+    redirect(route_url('admin'));
+}
+
 if ($action === 'admin_delete_home_slide' && $_SERVER['REQUEST_METHOD'] === 'POST' && is_admin()) {
     delete_home_slide((int) post('slide_id', 0));
     flash('success', 'Foto Home eliminata.');
@@ -350,7 +360,7 @@ if ($action === 'recipe' && ($recipeId = (int) query('id'))) {
     if ($recipe) {
         $recipeIngredients = fetch_all($db, 'SELECT ingredients.name, recipe_ingredients.quantity_value, recipe_ingredients.quantity_unit FROM recipe_ingredients JOIN ingredients ON ingredients.id = recipe_ingredients.ingredient_id WHERE recipe_ingredients.recipe_id = ?', [$recipeId]);
         $recipeUtensils = fetch_all($db, 'SELECT utensils.name FROM recipe_utensils JOIN utensils ON utensils.id = recipe_utensils.utensil_id WHERE recipe_utensils.recipe_id = ?', [$recipeId]);
-        $recipeMethods = fetch_all($db, 'SELECT cooking_methods.name, recipe_cooking_methods.minutes FROM recipe_cooking_methods JOIN cooking_methods ON cooking_methods.id = recipe_cooking_methods.cooking_method_id WHERE recipe_cooking_methods.recipe_id = ?', [$recipeId]);
+        $recipeMethods = fetch_all($db, 'SELECT cooking_methods.name, recipe_cooking_methods.minutes, recipe_cooking_methods.temperature FROM recipe_cooking_methods JOIN cooking_methods ON cooking_methods.id = recipe_cooking_methods.cooking_method_id WHERE recipe_cooking_methods.recipe_id = ?', [$recipeId]);
         $comments = fetch_all($db, 'SELECT comments.*, users.name FROM comments JOIN users ON users.id = comments.user_id WHERE comments.recipe_id = ? ORDER BY comments.created_at DESC', [$recipeId]);
         $gallery = fetch_all($db, 'SELECT * FROM recipe_images WHERE recipe_id = ? ORDER BY created_at DESC', [$recipeId]);
     }
@@ -373,6 +383,7 @@ usort($photoGallery, static fn (array $a, array $b): int => strcmp((string) ($b[
 $homeHeroTheme = home_theme();
 $homeThemeOptions = home_theme_options();
 $loginCoverImage = login_cover_image_path();
+$loginCoverImages = available_login_cover_images();
 $pageViews = increment_page_views();
 $activeUsersCount = active_logged_in_users_count();
 $totalRecipes = (int) $db->query('SELECT COUNT(*) FROM recipes')->fetchColumn();

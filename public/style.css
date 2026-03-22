@@ -19,11 +19,15 @@ img { max-width: 100%; display: block; }
 .site-branding h1, .landing-title { margin: 0; font-weight: 800; letter-spacing: .14em; font-family: "Old English Text MT", "Goudy Text MT", "Palatino Linotype", Georgia, serif; }
 .site-branding h1 { font-size: clamp(2rem, 4vw, 3.35rem); }
 .landing-title {
-  font-size: clamp(1.7rem, 4.6vw, 3.3rem);
-  letter-spacing: .08em;
-  line-height: 1.05;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  width: 100%;
+  max-width: 100%;
+  margin-inline: auto;
+  font-size: clamp(.82rem, 2.1vw, 1.28rem);
+  letter-spacing: .015em;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow-wrap: normal;
+  word-break: normal;
 }
 .site-branding p { margin: 0; font-size: 1.05rem; color: var(--muted); }
 .site-stats { display: flex; flex-wrap: wrap; justify-content: center; gap: .9rem; font-size: .98rem; color: var(--accent-dark); }
@@ -62,10 +66,22 @@ img { max-width: 100%; display: block; }
 .card-button, .recipe-card, .flash, .stack-form, .comment-box, .photo-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.04); }
 .card-button { padding: 1.25rem; text-align: center; font-weight: bold; }
 .recipe-grid, .photo-gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.photo-gallery-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .85rem; align-items: start; }
 .recipe-card, .photo-card { padding: 1rem; }
-.photo-card { display: grid; gap: .85rem; }
-.photo-card img { border-radius: 14px; height: 240px; object-fit: cover; width: 100%; }
-.photo-card-copy { display: grid; gap: .45rem; }
+.photo-card { display: grid; gap: .65rem; padding: .75rem; }
+.photo-thumb-button { border: 0; padding: 0; margin: 0; background: transparent; cursor: pointer; border-radius: 14px; overflow: hidden; aspect-ratio: 1 / 1; }
+.photo-card img { border-radius: 14px; height: 100%; object-fit: cover; width: 100%; }
+.photo-card-copy { display: grid; gap: .4rem; }
+.photo-card-copy h3 { margin: 0; font-size: 1rem; line-height: 1.25; overflow-wrap: anywhere; }
+.photo-card-copy p { margin: 0; font-size: .95rem; }
+.photo-lightbox { width: min(94vw, 1100px); border: none; padding: 0; background: transparent; }
+.photo-lightbox::backdrop { background: rgba(0,0,0,.82); }
+.photo-lightbox-shell { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 1rem; }
+.photo-lightbox-figure { margin: 0; background: white; border-radius: 20px; padding: 1rem; display: grid; gap: .75rem; }
+.photo-lightbox-figure img { width: 100%; max-height: 78vh; object-fit: contain; border-radius: 14px; background: #f8ede4; }
+.photo-lightbox-copy { display: grid; gap: .35rem; color: var(--text); }
+.photo-lightbox-close, .photo-lightbox-nav { border: none; background: rgba(255,255,255,.92); color: var(--accent-dark); width: 48px; height: 48px; border-radius: 999px; font-size: 1.8rem; cursor: pointer; }
+.photo-lightbox-close { position: absolute; top: 1rem; right: 1rem; }
 .stack-form { padding: 1rem; display: grid; gap: 1rem; }
 .stack-form label, .stack-form fieldset { display: grid; gap: .5rem; }
 .stack-form input, .stack-form select, .stack-form textarea, .stack-form button { padding: .8rem; border: 1px solid var(--border); border-radius: 10px; }
@@ -74,6 +90,7 @@ img { max-width: 100%; display: block; }
 .secondary-button { background: #f2d6ce !important; color: var(--accent-dark) !important; }
 .inline-grid { display: grid; grid-template-columns: minmax(0, 2fr) 140px 110px; gap: .75rem; margin-bottom: .5rem; align-items: start; }
 .ingredient-picker { display: grid; gap: .45rem; }
+.cooking-grid { grid-template-columns: minmax(0, 1.6fr) 120px 160px; }
 .filter-input, .ingredient-search { width: 100%; }
 .filters { display: flex; gap: .75rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .filters select, .filters button { padding: .7rem; border-radius: 10px; border: 1px solid var(--border); }
@@ -97,13 +114,14 @@ img { max-width: 100%; display: block; }
 .small-form { margin-top: 1rem; }
 .helper-text { margin: 0; color: var(--muted); line-height: 1.5; }
 .admin-preview { width: 100%; max-height: 220px; object-fit: cover; border-radius: 14px; border: 1px solid var(--border); }
+.login-cover-preview { width: 100px; height: 56px; object-fit: contain; margin-inline: auto; background: #fff; padding: .2rem; }
 .home-slide-admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
 .home-slide-admin-card { display: grid; gap: .75rem; }
 .landing-page { min-height: 100vh; background: #fff; background-position: center; background-size: cover; background-repeat: no-repeat; display: grid; place-items: center; padding: 2rem; }
 .landing-page.has-cover { position: relative; }
 .landing-page.has-cover::before { content: ""; position: absolute; inset: 0; background: rgba(255,255,255,.42); }
 .landing-shell { position: relative; z-index: 1; width: min(100%, 1200px); display: grid; place-items: center; }
-.landing-card { width: min(100%, 560px); text-align: center; background: rgba(255,255,255,.92); }
+.landing-card { width: min(100%, 560px); text-align: center; background: rgba(255,255,255,.92); overflow: hidden; }
 .landing-copy { line-height: 1.7; color: var(--muted); margin: 1rem 0 1.2rem; }
 .landing-form { text-align: left; }
 @media (max-width: 860px) {
@@ -112,7 +130,10 @@ img { max-width: 100%; display: block; }
   .site-branding, .auth-box, .user-links { text-align: center; justify-content: center; }
   .auth-box { grid-row: 1; }
   .inline-grid { grid-template-columns: 1fr; }
-  .landing-title { font-size: clamp(1.5rem, 9vw, 2.3rem); letter-spacing: .05em; }
+  .landing-title { font-size: clamp(.76rem, 4.8vw, 1rem); letter-spacing: .01em; }
+  .photo-lightbox-shell { grid-template-columns: 1fr; }
+  .photo-lightbox-close { position: static; justify-self: end; }
+  .photo-lightbox-nav { width: 42px; height: 42px; }
 }
 @media print {
   .site-header, .print-actions, form, nav, script { display: none !important; }
