@@ -123,6 +123,7 @@ img { max-width: 100%; display: block; }
 .media-library-grid { grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .85rem; align-items: start; }
 .home-slide-admin-card { display: grid; gap: .75rem; }
 .media-library-grid .home-slide-admin-card { gap: .65rem; padding: .75rem; }
+.library-preview { width: 100%; height: auto; max-height: none; min-height: 0; aspect-ratio: 1 / 1; object-fit: cover; }
 .library-preview { width: 100%; max-height: none; aspect-ratio: 1 / 1; object-fit: cover; }
 .landing-page { min-height: 100vh; background: #fff; background-position: center; background-size: cover; background-repeat: no-repeat; display: grid; place-items: center; padding: 2rem; }
 .landing-page.has-cover { position: relative; }
