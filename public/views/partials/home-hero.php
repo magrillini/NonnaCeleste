@@ -18,9 +18,9 @@
         <h2 class="page-title home-title">NONNA CELESTE</h2>
         <p>Le ricette di famiglia, la memoria della tradizione e le varianti moderne raccolte in un unico archivio.</p>
         <div class="grid-buttons">
-            <a class="card-button" href="/?action=traditional">Ricetta tradizionale</a>
-            <a class="card-button" href="/?action=family">Ricette familiari</a>
-            <a class="card-button" href="/?action=submit">Inserimento ricetta</a>
+            <a class="card-button" href="<?= e(route_url('traditional')) ?>">Ricetta tradizionale</a>
+            <a class="card-button" href="<?= e(route_url('family')) ?>">Ricette familiari</a>
+            <a class="card-button" href="<?= e(route_url('submit')) ?>">Inserimento ricetta</a>
         </div>
     </div>
 </section>

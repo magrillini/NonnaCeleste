@@ -45,8 +45,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 if ($action === 'logout') {
     unregister_active_session();
     session_destroy();
-    header('Location: /');
-    exit;
+    redirect('/');
 }
 
 if ($action === 'update_profile' && $_SERVER['REQUEST_METHOD'] === 'POST') {
