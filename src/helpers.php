@@ -116,7 +116,7 @@ function route_url(?string $action = null, array $params = [], string $fragment 
         $params = ['action' => $action] + $params;
     }
 
-    return app_url('/', $params, $fragment);
+    return app_url('/index.php', $params, $fragment);
 }
 
 function asset_url(string $path): string
