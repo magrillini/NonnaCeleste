@@ -39,7 +39,7 @@ if ($action === 'login' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         flash('error', 'Credenziali non valide.');
     }
-    redirect('/?action=home');
+    redirect('/');
 }
 
 if ($action === 'logout') {
